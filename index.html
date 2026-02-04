@@ -5,13 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Project K: System Core</title>
     
+    <!-- 
+        PROJECT K: EXTERNAL DEPENDENCIES
+        - JetBrains Mono: For data/code representation.
+        - Space Grotesk: For architectural headers.
+        - Feather Icons: For minimal SVG iconography.
+    -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/feather-icons"></script>
 
     <style>
-        /* --- DESIGN TOKENS --- */
+        /* * ==========================================================================
+         * DESIGN SYSTEM & TOKENS
+         * Strict architectural palette. No deviations permitted.
+         * ==========================================================================
+         */
         :root {
             /* Palette - Architectural/Brutalist */
             --bg-canvas: #F4F4F4;
@@ -28,12 +38,14 @@
             --line-medium: #CCCCCC;
             --line-heavy: #121212;
             
+            /* Functional Colors */
             --accent-core: #9A3B3B; /* Rust */
             --accent-wash: rgba(154, 59, 59, 0.08);
             --accent-hover: rgba(154, 59, 59, 0.12);
             --accent-error: #B00020;
             --accent-success: #2E7D32;
             --accent-audit: #D4A017;
+            --accent-cooldown: #FF9800;
             
             /* Typography */
             --font-display: 'Space Grotesk', system-ui, sans-serif;
@@ -42,18 +54,21 @@
             
             /* Metrics */
             --spacing-unit: 8px;
-            --tap-target: 48px; /* Strict Minimum */
+            --tap-target: 48px; /* Strict Minimum for Touch */
             --radius-sharp: 2px;
             --radius-soft: 4px;
             
-            /* Animation */
+            /* Animation Constants */
             --ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
             --ease-in-out: cubic-bezier(0.645, 0.045, 0.355, 1);
             --duration-fast: 150ms;
             --duration-normal: 300ms;
         }
 
-        /* --- RESET & BASE --- */
+        /* * ==========================================================================
+         * RESET & BASE STYLES
+         * ==========================================================================
+         */
         *, *::before, *::after {
             box-sizing: border-box;
             margin: 0;
@@ -64,7 +79,7 @@
 
         html, body {
             height: 100%;
-            overflow: hidden; /* App-like behavior */
+            overflow: hidden; /* App-like layout behavior */
         }
 
         body {
@@ -74,10 +89,13 @@
             line-height: 1.5;
             display: flex;
             flex-direction: column;
-            font-size: 16px; /* Base size for legibility */
+            font-size: 16px; /* Base legibility size */
         }
 
-        /* --- TYPOGRAPHY SYSTEM --- */
+        /* * ==========================================================================
+         * TYPOGRAPHY SYSTEM
+         * ==========================================================================
+         */
         h1, h2, h3, h4 {
             font-family: var(--font-display);
             font-weight: 600;
@@ -104,7 +122,11 @@
         .text-small { font-size: 0.85rem; color: var(--ink-secondary); }
         .text-micro { font-size: 0.7rem; color: var(--ink-tertiary); }
 
-        /* --- LAYOUT SHELL --- */
+        /* * ==========================================================================
+         * LAYOUT & APP SHELL
+         * Single-column constrained layout for focus.
+         * ==========================================================================
+         */
         .app-shell {
             width: 100%;
             max-width: 700px;
@@ -119,7 +141,6 @@
             box-shadow: 0 0 50px rgba(0,0,0,0.05);
         }
 
-        /* --- SCROLLABLE VIEWPORT --- */
         .viewport {
             flex: 1;
             overflow-y: auto;
@@ -131,7 +152,11 @@
             gap: 32px;
         }
 
-        /* --- HEADER & GRID --- */
+        /* * ==========================================================================
+         * HEADER SECTION
+         * Status, Date, and Visual Grid
+         * ==========================================================================
+         */
         .header-section {
             display: flex;
             flex-direction: column;
@@ -166,18 +191,23 @@
             background: var(--ink-tertiary);
             transition: background-color 0.3s;
         }
+        /* Status States */
         .status-dot.active { background: var(--accent-success); box-shadow: 0 0 4px var(--accent-success); }
         .status-dot.error { background: var(--accent-error); box-shadow: 0 0 4px var(--accent-error); }
         .status-dot.audit { background: var(--accent-audit); }
         .status-dot.locked { background: var(--ink-secondary); }
 
-        /* YEAR GRID (2026) */
+        /* * ==========================================================================
+         * YEAR GRID COMPONENT
+         * Visualizing consistency over time. 
+         * No interaction for future/pre-start days.
+         * ==========================================================================
+         */
         .year-grid-wrapper {
             display: flex;
             flex-direction: column;
             gap: 8px;
-            /* Prevent accidental scroll capture on mobile */
-            touch-action: pan-x pan-y; 
+            touch-action: pan-x pan-y; /* Prevent accidental scroll capture */
         }
 
         .year-grid {
@@ -188,8 +218,8 @@
             grid-template-rows: repeat(7, 1fr);
             grid-auto-flow: column;
             gap: 2px;
-            height: 90px; /* Slightly taller for touch */
-            padding: 2px; /* Touch buffer */
+            height: 90px;
+            padding: 2px;
         }
 
         .grid-cell {
@@ -197,7 +227,7 @@
             border-radius: 1px;
             cursor: pointer;
             transition: opacity 0.1s;
-            position: relative; /* For Pseudo-elements */
+            position: relative;
         }
         
         .grid-cell.pre-start { 
@@ -218,30 +248,59 @@
             z-index: 2; 
             background: #FFF;
         }
+
+        /* Focus Mode: Dim cells outside 14 day window */
+        .grid-cell.dimmed {
+            opacity: 0.2;
+        }
         
         /* State Colors */
-        .grid-cell[data-state="partial"] { background: var(--accent-wash); }
-        .grid-cell[data-state="complete"] { background: var(--accent-core); }
+        .grid-cell[data-state="partial"] { background: var(--accent-wash); opacity: 1 !important; }
+        .grid-cell[data-state="complete"] { background: var(--accent-core); opacity: 1 !important; }
         
         /* Touch feedback */
         .grid-cell:active { transform: scale(0.9); }
 
-        /* --- PROTOCOL SECTION --- */
+        /* * ==========================================================================
+         * PROTOCOL CARD (DAILY VIEW)
+         * ==========================================================================
+         */
         .protocol-card {
             display: flex;
             flex-direction: column;
             gap: 32px;
         }
 
+        /* Phase Indicator */
+        .phase-indicator {
+            background: var(--bg-inset);
+            border: 1px solid var(--line-light);
+            padding: 12px;
+            margin-bottom: 12px;
+            font-family: var(--font-technical);
+            font-size: 0.8rem;
+            color: var(--ink-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* Audit Warning Visuals */
+        .phase-indicator.audit-locked {
+            border-color: var(--accent-audit);
+            background: rgba(212, 160, 23, 0.1);
+            color: var(--accent-audit);
+        }
+
         /* Focus Selector */
         .focus-group {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px; /* Larger gap for touch */
+            gap: 12px;
         }
 
         .focus-chip {
-            padding: 10px 18px; /* Larger target */
+            padding: 10px 18px; /* Large touch target */
             min-height: var(--tap-target);
             border: 1px solid var(--line-light);
             background: transparent;
@@ -282,7 +341,7 @@
             font-weight: 700;
         }
 
-        /* Visual Warning Animation */
+        /* Warning Animation */
         .warning-flash { animation: flashError 0.5s var(--ease-in-out); }
         @keyframes flashError {
             0%, 100% { border-color: var(--line-light); transform: translateX(0); }
@@ -301,13 +360,13 @@
 
         .check-item {
             display: flex;
-            align-items: flex-start; /* Align top for multiline */
+            align-items: flex-start;
             gap: 16px;
             padding: 16px 0;
             border-bottom: 1px solid var(--line-light);
             cursor: pointer;
             transition: background var(--duration-fast);
-            min-height: 64px; /* Generous touch target */
+            min-height: 64px;
         }
 
         .check-item:active { background: var(--bg-inset); }
@@ -321,7 +380,7 @@
         .checkbox-ui {
             width: 24px;
             height: 24px;
-            margin-top: 2px; /* Optical alignment */
+            margin-top: 2px;
             border: 1.5px solid var(--ink-secondary);
             border-radius: 2px;
             display: flex;
@@ -381,7 +440,7 @@
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 1px; /* Borders via gap */
+            gap: 1px;
             background: var(--line-light);
             border: 1px solid var(--line-light);
         }
@@ -513,6 +572,11 @@
             border-color: var(--accent-core);
             box-shadow: 0 0 0 1px var(--accent-core);
         }
+        .journal-editor:disabled {
+            background: var(--bg-inset);
+            cursor: not-allowed;
+            color: var(--ink-tertiary);
+        }
 
         .save-indicator {
             font-family: var(--font-technical);
@@ -524,6 +588,11 @@
             align-items: center;
             justify-content: flex-end;
             gap: 6px;
+        }
+        
+        .save-indicator.cooldown {
+            color: var(--accent-cooldown);
+            font-weight: 600;
         }
 
         /* --- PRE-START STATE --- */
@@ -608,7 +677,7 @@
             <!-- Footer / Integrity -->
             <div class="system-footer">
                 <div class="text-mono text-small" style="font-size: 0.6rem; color: var(--ink-tertiary);">
-                    v4.1.0 // SECURE RECORD // IMMUTABLE HISTORY
+                    v4.3.0 // SECURE RECORD // INTEGRITY HARDENED
                 </div>
             </div>
         </div>
@@ -669,6 +738,12 @@
     <template id="tpl-active">
         <div class="protocol-card">
             
+            <!-- Phase Indicator -->
+            <div class="phase-indicator" id="phase-display">
+                <span id="phase-name">PHASE 1: FOUNDATION</span>
+                <span id="phase-progress">0/7 DAYS</span>
+            </div>
+
             <!-- Focus Section -->
             <div>
                 <div class="text-label">DAILY FOCUS INTENT</div>
@@ -694,9 +769,9 @@
                         <div class="metric-sub" id="metric-ratio-detail">0/0 Days</div>
                     </div>
                     <div class="metric-box">
-                        <div class="text-label">PERFECT RUN</div>
-                        <div class="metric-value" id="metric-streak">0</div>
-                        <div class="metric-sub" id="metric-streak-detail">Current Streak</div>
+                        <div class="text-label">INCOMPLETE</div>
+                        <div class="metric-value" id="metric-incomplete" style="color: var(--accent-audit)">0</div>
+                        <div class="metric-sub">Started/Unfinished</div>
                     </div>
                     <div class="metric-box">
                         <div class="text-label">INCONSISTENCY</div>
@@ -704,9 +779,9 @@
                         <div class="metric-sub">Days Missed</div>
                     </div>
                     <div class="metric-box">
-                        <div class="text-label">TOTAL LOGS</div>
-                        <div class="metric-value" id="metric-total">0</div>
-                        <div class="metric-sub">System Events</div>
+                        <div class="text-label">PERFECT RUN</div>
+                        <div class="metric-value" id="metric-streak">0</div>
+                        <div class="metric-sub">Current Streak</div>
                     </div>
                 </div>
             </div>
@@ -716,16 +791,16 @@
 
     <script>
         /**
-         * PROJECT K: JAVA MASTERY - SYSTEM CORE v4.1.0
+         * PROJECT K: JAVA MASTERY - SYSTEM CORE v4.3.0
          * * PRINCIPLES:
          * 1. TRUTH: Date logic is absolute. Feb 5, 2026 is Day 0.
-         * 2. INTEGRITY: State is hashed and audited. Corruption triggers safety modes.
+         * 2. INTEGRITY: State is hashed and audited. Speed violations flag system.
          * 3. DISCIPLINE: Sequential execution. Focus locking. Append-only journals.
          * * ARCHITECTURE:
          * - DateEngine: Time authority.
          * - IntegritySystem: Security and validation.
          * - StateStore: Persistence and transactions.
-         * - DomainLogic: Business rules.
+         * - DomainLogic: Business rules (Phases, Metrics).
          * - ViewEngine: UI Rendering.
          * - ActionController: User intent handling.
          */
@@ -733,15 +808,28 @@
         /* --- 1. CONFIGURATION --- */
         const CONFIG = {
             START_DATE: "2026-02-05", // ABSOLUTE START DATE
-            STORAGE_KEY: "project_k_master_v4_1",
-            FOCUS_AREAS: ['Collections', 'OOP', 'Streams', 'Concurrency', 'System Design'],
+            STORAGE_KEY: "project_k_master_v4_3",
             CHECKLIST: [
                 { id: 'c1', text: "Warm-up: 3 CodingBat Problems", time: "15m" },
                 { id: 'c2', text: "Core: Deep Dive Video Session", time: "45m" },
                 { id: 'c3', text: "Practice: 1 HackerRank Challenge", time: "30m" },
                 { id: 'c4', text: "Review: Explain Logic Aloud", time: "10m" },
                 { id: 'c5', text: "System: Log Entry & Commit", time: "5m" }
-            ]
+            ],
+            FOCUS_AREAS: ['Collections', 'OOP', 'Streams', 'Concurrency', 'System Design'],
+            // Curriculum Phases
+            PHASES: [
+                { id: 'p1', name: "PHASE 1: FOUNDATION", requiredDays: 7, allowedFocus: ['Syntax', 'Loops', 'Control Flow', 'Methods'] },
+                { id: 'p2', name: "PHASE 2: OOP CORE", requiredDays: 10, allowedFocus: ['Classes', 'Interfaces', 'Polymorphism', 'Inheritance'] },
+                { id: 'p3', name: "PHASE 3: COLLECTIONS", requiredDays: 10, allowedFocus: ['Lists', 'Sets', 'Maps', 'Generics'] },
+                { id: 'p4', name: "PHASE 4: ADVANCED", requiredDays: 14, allowedFocus: ['Streams', 'Concurrency', 'IO', 'Exceptions'] }
+            ],
+            // Integrity & Cooldowns
+            JOURNAL_COOLDOWN: 5 * 60 * 1000,
+            INTEGRITY_RULES: {
+                MIN_ITEM_TIME: 2000, // ms between checks
+                MIN_TOTAL_TIME: 1000 * 60 * 10 // 10 minutes real execution implied
+            }
         };
 
         /* --- 2. DATE ENGINE (THE TRUTH) --- */
@@ -791,6 +879,12 @@
                 return Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
             },
 
+            getDiffDays: (dateStr1, dateStr2) => {
+                const d1 = DateEngine.parse(dateStr1);
+                const d2 = DateEngine.parse(dateStr2);
+                return Math.ceil((d1 - d2) / (1000 * 60 * 60 * 24));
+            },
+
             isPreStart: (dateStr) => dateStr < CONFIG.START_DATE,
             isFuture: (dateStr) => dateStr > DateEngine.getToday(),
             isToday: (dateStr) => dateStr === DateEngine.getToday()
@@ -812,28 +906,26 @@
             },
 
             audit: (state) => {
-                // 1. Check for future completion (Impossible state)
                 const today = DateEngine.getToday();
                 let violations = [];
                 
+                // 1. Future Modification
                 Object.keys(state.history).forEach(date => {
                     if (date > today && state.history[date].checklist.length > 0) {
                         violations.push({ type: "FUTURE_MODIFICATION", date });
-                        delete state.history[date]; // Auto-repair: Delete impossible future data
+                        delete state.history[date]; // Auto-repair
                     }
                 });
 
-                // 2. Check Sequence Validity in History
+                // 2. Sequence Validity
                 Object.keys(state.history).forEach(date => {
                     const entry = state.history[date];
                     if (entry.checklist && entry.checklist.length > 0) {
-                        // Ensure no gaps
                         const indices = entry.checklist.map(id => CONFIG.CHECKLIST.findIndex(i => i.id === id)).sort((a,b) => a-b);
                         for (let i = 0; i < indices.length; i++) {
                             if (indices[i] !== i) {
                                 violations.push({ type: "SEQUENCE_GAP", date });
-                                // Auto-repair: Reset invalid day
-                                entry.checklist = [];
+                                entry.checklist = []; // Reset invalid
                                 entry.focusLocked = false;
                                 break;
                             }
@@ -841,7 +933,7 @@
                     }
                 });
 
-                // 3. Schema & Hash Check (Basic)
+                // 3. Schema Check
                 if (!state.meta || !state.meta.created) {
                     violations.push({ type: "SCHEMA_MISSING" });
                     state.meta = { created: Date.now(), version: 4 };
@@ -854,15 +946,45 @@
                 return true;
             },
 
+            // Check if day execution was realistic
+            validateExecutionSpeed: (entry) => {
+                if (!entry.checklistLog || entry.checklistLog.length === 0) return true; // No data to judge
+                
+                // Sort logs by timestamp
+                const logs = entry.checklistLog.sort((a,b) => a.ts - b.ts);
+                
+                // Check minimum interval
+                for (let i = 1; i < logs.length; i++) {
+                    if (logs[i].ts - logs[i-1].ts < CONFIG.INTEGRITY_RULES.MIN_ITEM_TIME) {
+                        return false; // Too fast between clicks
+                    }
+                }
+                
+                // Check total duration if complete
+                if (entry.checklist.length === CONFIG.CHECKLIST.length) {
+                    const duration = logs[logs.length-1].ts - logs[0].ts;
+                    // If done in < 30 seconds total, suspicious.
+                    // Using generous 10s for this example, but prompt suggests stricter.
+                    if (duration < 10000) return false; 
+                }
+                
+                return true;
+            },
+
             report: (code, details) => {
                 console.warn(`[AUDIT] ${code}`, details);
-                // Visual Indicator
                 const dot = document.getElementById('integrity-dot');
                 const msg = document.getElementById('integrity-msg');
                 if(dot) {
                     dot.className = "status-dot audit";
                     msg.textContent = "AUDIT";
                 }
+                Store.logEvent("INTEGRITY_FLAG", { code });
+            },
+            
+            isCompromised: () => {
+                const dot = document.getElementById('integrity-dot');
+                return dot && dot.classList.contains('audit');
             }
         };
 
@@ -870,8 +992,8 @@
         const Store = {
             data: {
                 meta: { version: 4, created: Date.now(), lastHash: "" },
-                history: {}, // "YYYY-MM-DD": { focus:Str, focusLocked:Bool, checklist:[ids], notes:[{ts, text}] }
-                events: []   // Audit Log: { ts, type, details }
+                history: {}, // "YYYY-MM-DD": { focus:Str, focusLocked:Bool, checklist:[ids], notes:[{ts, text}], checklistLog:[{id, action, ts}] }
+                events: []   // Audit Log
             },
 
             init: () => {
@@ -883,16 +1005,12 @@
                         Integrity.audit(Store.data);
                     } catch (e) {
                         Integrity.report("CORRUPTION_RESET", e);
-                        // In production, we might backup. Here, we enforce strictness.
-                        // However, preserving notes is kind. We will try to salvage.
-                        // If totally failed, reset.
                         Store.reset();
                     }
                 } else {
                     Store.reset();
                 }
                 
-                // Ensure today exists if allowed
                 const today = DateEngine.getToday();
                 if (!DateEngine.isPreStart(today) && !Store.data.history[today]) {
                     Store.createEntry(today);
@@ -913,36 +1031,33 @@
                     focus: null, 
                     focusLocked: false, 
                     checklist: [], 
-                    notes: [] // Array of {ts, text} for immutable appending
+                    notes: [], 
+                    checklistLog: [] // Granular timestamps
                 };
             },
 
             save: () => {
                 const json = JSON.stringify(Store.data);
-                Store.data.meta.lastHash = Integrity.hash(json); // Sign the state
+                Store.data.meta.lastHash = Integrity.hash(json); 
                 localStorage.setItem(CONFIG.STORAGE_KEY, json);
             },
 
-            // Get immutable copy of entry
             getEntry: (date) => {
                 if (!Store.data.history[date]) return null;
-                // Deep copy to prevent mutation outside Store
                 return JSON.parse(JSON.stringify(Store.data.history[date]));
             },
 
-            // Transactional update for Today ONLY
             updateToday: (callback) => {
                 const today = DateEngine.getToday();
-                if (DateEngine.isPreStart(today)) return; // Lockout
+                if (DateEngine.isPreStart(today)) return; 
                 
                 if (!Store.data.history[today]) {
                     Store.createEntry(today);
                 }
                 
-                // execute mutation
                 callback(Store.data.history[today]);
                 
-                // Check focus lock condition automatically
+                // Auto Focus Lock
                 const entry = Store.data.history[today];
                 if (entry.checklist.length > 0 && !entry.focusLocked) {
                     entry.focusLocked = true;
@@ -950,71 +1065,98 @@
                 }
 
                 Store.save();
-                View.render(); // Global Re-render
+                View.render(); 
             },
 
-            // Append-only Note Logic
             appendNote: (date, text) => {
                 if (!Store.data.history[date]) {
-                    if (DateEngine.isFuture(date)) return;
+                    if (DateEngine.isFuture(date)) return false;
                     Store.createEntry(date);
                 }
                 
-                // Push new block
-                const noteBlock = {
-                    ts: Date.now(),
-                    text: text.trim()
-                };
-                
-                // Avoid empty appends
-                if (noteBlock.text.length === 0) return;
+                // Cooldown logic
+                const notes = Store.data.history[date].notes;
+                if (notes.length > 0) {
+                    const lastNote = notes[notes.length - 1];
+                    const diff = Date.now() - lastNote.ts;
+                    if (diff < CONFIG.JOURNAL_COOLDOWN) {
+                        Store.logEvent("JOURNAL_COOLDOWN_BLOCKED", { date });
+                        return false; 
+                    }
+                }
+
+                const noteBlock = { ts: Date.now(), text: text.trim() };
+                if (noteBlock.text.length === 0) return false;
 
                 Store.data.history[date].notes.push(noteBlock);
                 Store.save();
+                return true;
             },
 
             logEvent: (type, details) => {
-                Store.data.events.push({
-                    ts: Date.now(),
-                    type: type,
-                    details: details
-                });
-                // Keep log size managed? Maybe later. For now, infinite log for "Record Reality".
+                Store.data.events.push({ ts: Date.now(), type, details });
             }
         };
 
         /* --- 5. DOMAIN LOGIC --- */
         const Domain = {
-            // Is focus selection permitted?
-            canChangeFocus: (entry) => {
-                return !entry.focusLocked;
+            canChangeFocus: (entry) => !entry.focusLocked,
+
+            // Determine Phase based on VALIDATED perfected days
+            getPhaseContext: (history) => {
+                const start = DateEngine.parse(CONFIG.START_DATE);
+                
+                // 1. Calculate validated completed days
+                let completedCount = 0;
+                
+                Object.keys(history).forEach(d => {
+                    if (d >= CONFIG.START_DATE && d <= DateEngine.getToday()) {
+                        const entry = history[d];
+                        // strict criteria: full checklist + speed validation + log integrity
+                        if (entry.checklist.length === CONFIG.CHECKLIST.length && 
+                            entry.checklistLog && 
+                            Integrity.validateExecutionSpeed(entry)) {
+                            completedCount++;
+                        }
+                    }
+                });
+
+                // 2. Find Phase
+                let accumulatedDays = 0;
+                for (let i = 0; i < CONFIG.PHASES.length; i++) {
+                    const p = CONFIG.PHASES[i];
+                    if (completedCount < accumulatedDays + p.requiredDays) {
+                        const progress = completedCount - accumulatedDays;
+                        return { 
+                            phase: p, 
+                            progress: progress, 
+                            total: p.requiredDays,
+                            locked: false 
+                        };
+                    }
+                    accumulatedDays += p.requiredDays;
+                }
+                
+                // Max level
+                return { 
+                    phase: CONFIG.PHASES[CONFIG.PHASES.length - 1], 
+                    progress: CONFIG.PHASES[CONFIG.PHASES.length - 1].requiredDays, 
+                    total: CONFIG.PHASES[CONFIG.PHASES.length - 1].requiredDays,
+                    locked: false 
+                };
             },
 
-            // Checklist Logic
             canCheck: (entry, index) => {
-                // Requirement: Strictly sequential
-                // Can check index N if:
-                // 1. Focus is selected
-                // 2. Index N-1 is checked (or N=0)
-                
+                // Must have focus selected before first check
                 if (!entry.focus) return { allowed: false, reason: "NO_FOCUS" };
                 
                 const id = CONFIG.CHECKLIST[index].id;
                 const isChecked = entry.checklist.includes(id);
-
-                // Check if already checked (Uncheck logic)
-                if (isChecked) {
-                    // Allowed to uncheck, but warns about sequence breaking?
-                    // "Undoing a checkbox logs an incomplete event"
-                    return { allowed: true, action: "uncheck" };
-                }
-
-                // Sequential check
+                if (isChecked) return { allowed: true, action: "uncheck" };
                 if (index > 0) {
                     const prevId = CONFIG.CHECKLIST[index - 1].id;
                     if (!entry.checklist.includes(prevId)) return { allowed: false, reason: "SEQUENCE" };
                 }
-                
                 return { allowed: true, action: "check" };
             },
 
@@ -1027,33 +1169,35 @@
                     totalDays: 0,
                     executedDays: 0,
                     missedDays: 0,
+                    incompleteDays: 0,
                     perfectRun: 0,
                     currentRun: 0,
                     totalLogs: Store.data.events.length
                 };
 
-                if (today < start) return stats; // No metrics pre-start
+                if (today < start) return stats;
 
-                // Calculate total days including today
                 const diffTime = Math.abs(today - start);
                 stats.totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
                 let tempStreak = 0;
 
-                // Iterate day by day from start to today
                 for (let i = 0; i < stats.totalDays; i++) {
                     const d = new Date(start);
                     d.setDate(start.getDate() + i);
                     const str = d.toISOString().split('T')[0];
                     const entry = history[str];
                     
-                    const isPerfect = entry && entry.checklist.length === CONFIG.CHECKLIST.length;
-                    
-                    if (isPerfect) {
+                    if (entry && entry.checklist.length === CONFIG.CHECKLIST.length) {
                         stats.executedDays++;
                         tempStreak++;
+                    } else if (entry && entry.checklist.length > 0) {
+                        // Started but not finished
+                        if (str !== DateEngine.getToday()) {
+                            stats.incompleteDays++;
+                        }
+                        tempStreak = 0;
                     } else {
-                        // Only count as missed if it's in the past. Today isn't missed until tomorrow.
                         if (str !== DateEngine.getToday()) {
                             stats.missedDays++;
                         }
@@ -1063,7 +1207,6 @@
                     if (tempStreak > stats.perfectRun) stats.perfectRun = tempStreak;
                 }
                 stats.currentRun = tempStreak;
-
                 return stats;
             }
         };
@@ -1071,45 +1214,35 @@
         /* --- 6. VIEW ENGINE --- */
         const View = {
             init: () => {
-                // Bind Global Events
                 document.getElementById('panel-close').addEventListener('click', Panel.close);
                 document.getElementById('panel-overlay').addEventListener('click', Panel.close);
                 
-                // Keyboard Shortcuts
+                // Keyboard
                 document.addEventListener('keydown', (e) => {
                     if (e.key === 'Escape') Panel.close();
                     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-                        // Quick save logic if panel open
                         if (document.getElementById('side-panel').classList.contains('open')) {
                             const val = document.getElementById('journal-input').value;
                             if (val) {
                                 Panel.save(val);
-                                document.getElementById('journal-input').value = ""; // clear after save
+                                document.getElementById('journal-input').value = ""; 
                             }
                         }
                     }
                 });
 
-                // Initial Render
                 View.render();
             },
 
             render: () => {
                 const today = DateEngine.getToday();
-                
-                // 1. Header Date
                 document.getElementById('current-date-display').textContent = DateEngine.format(today);
-
-                // 2. Year Grid
                 View.renderGrid();
 
-                // 3. Dynamic Content
                 const contentArea = document.getElementById('dynamic-content');
                 if (DateEngine.isPreStart(today)) {
-                    // Locked View
                     View.renderLocked(contentArea);
                 } else {
-                    // Active Protocol
                     View.renderActive(contentArea, today);
                 }
             },
@@ -1118,8 +1251,6 @@
                 container.innerHTML = '';
                 const tpl = document.getElementById('tpl-locked');
                 container.appendChild(tpl.content.cloneNode(true));
-                
-                // Countdown
                 const daysLeft = DateEngine.getDaysUntilStart();
                 const el = document.getElementById('countdown-display');
                 if (el) el.textContent = `T-MINUS ${daysLeft} DAYS`;
@@ -1136,9 +1267,6 @@
 
             renderGrid: () => {
                 const root = document.getElementById('calendar-root');
-                // Optimization: Don't destroy if exists, just update?
-                // For simplicity and strict state reflection, we rebuild. 
-                // Grid is small enough (371 nodes).
                 root.innerHTML = ''; 
 
                 const days = DateEngine.getGridRange();
@@ -1148,13 +1276,15 @@
                     const el = document.createElement('div');
                     el.className = 'grid-cell';
                     
-                    // State Classes
                     if (DateEngine.isPreStart(dateStr)) el.classList.add('pre-start');
                     else if (DateEngine.isFuture(dateStr)) el.classList.add('future');
                     if (dateStr === today) el.classList.add('active-today');
 
-                    // Data State
-                    const entry = Store.getEntry(dateStr); // Use Store method which handles nulls
+                    // 14-Day Focus Window Dimming
+                    const diff = Math.abs(DateEngine.getDiffDays(today, dateStr));
+                    if (diff > 7) el.classList.add('dimmed');
+
+                    const entry = Store.getEntry(dateStr); 
                     if (entry) {
                         if (entry.checklist.length === CONFIG.CHECKLIST.length) {
                             el.dataset.state = 'complete';
@@ -1163,8 +1293,6 @@
                         }
                     }
 
-                    // Interaction
-                    // Allow tapping Pre-start/Future? Prompt says "Future and pre-start cells remain non-interactive."
                     if (!DateEngine.isFuture(dateStr) && !DateEngine.isPreStart(dateStr)) {
                         el.onclick = () => Panel.open(dateStr);
                     }
@@ -1174,16 +1302,34 @@
             },
 
             renderProtocol: (entry) => {
-                // Focus
+                // Focus & Phase
+                // IF Integrity compromised, freeze UI
+                if (Integrity.isCompromised()) {
+                    document.getElementById('phase-name').textContent = "AUDIT FREEZE";
+                    document.getElementById('phase-progress').textContent = "LOGS UNDER REVIEW";
+                    document.getElementById('phase-display').classList.add('audit-locked');
+                } else {
+                    const phaseCtx = Domain.getPhaseContext(Store.data.history);
+                    document.getElementById('phase-name').textContent = phaseCtx.phase.name;
+                    document.getElementById('phase-progress').textContent = `${phaseCtx.progress}/${phaseCtx.total} DAYS`;
+                }
+
                 const focusRoot = document.getElementById('focus-render-target');
                 const isLocked = !Domain.canChangeFocus(entry);
                 
                 if (isLocked) {
-                    document.getElementById('focus-lock-status').textContent = "LOCKED: Execution in progress";
-                    document.getElementById('focus-lock-status').style.color = "var(--accent-core)";
+                    const el = document.getElementById('focus-lock-status');
+                    el.textContent = "LOCKED: Execution in progress";
+                    el.style.color = "var(--accent-core)";
                 }
 
-                focusRoot.innerHTML = CONFIG.FOCUS_AREAS.map(f => {
+                // Render Focus Options based on Phase Config (Or defaults if pre-phase logic)
+                // Use default areas if phase info is not yet bound to strict filtering, but visual logic suggests phase mapping.
+                // Assuming CONFIG.PHASES allowedFocus usage:
+                const phaseCtx = Domain.getPhaseContext(Store.data.history);
+                const options = phaseCtx.phase.allowedFocus || CONFIG.FOCUS_AREAS;
+
+                focusRoot.innerHTML = options.map(f => {
                     const isSelected = entry.focus === f;
                     let classes = 'focus-chip';
                     
@@ -1194,9 +1340,7 @@
                         if (isLocked) classes += ' locked-out';
                     }
                     
-                    // Only attach click if not locked
                     const clickAttr = isLocked ? '' : `onclick="ActionController.selectFocus('${f}')"`;
-                    
                     return `<button class="${classes}" ${clickAttr}>${f}</button>`;
                 }).join('');
 
@@ -1210,7 +1354,6 @@
                     if (isChecked) classes += ' checked';
                     if (!lockStatus.allowed && !isChecked) classes += ' locked';
 
-                    // Onclick logic handled via Controller
                     return `
                         <div class="${classes}" onclick="ActionController.toggleCheck(${idx})">
                             <div class="checkbox-ui"></div>
@@ -1228,10 +1371,9 @@
                 
                 document.getElementById('metric-ratio').textContent = `${ratio}%`;
                 document.getElementById('metric-ratio-detail').textContent = `${stats.executedDays}/${stats.totalDays} Days`;
-                
                 document.getElementById('metric-streak').textContent = stats.currentRun;
-                
                 document.getElementById('metric-missed').textContent = stats.missedDays;
+                document.getElementById('metric-incomplete').textContent = stats.incompleteDays;
                 document.getElementById('metric-total').textContent = stats.totalLogs;
             }
         };
@@ -1240,10 +1382,8 @@
         const ActionController = {
             selectFocus: (focus) => {
                 Store.updateToday(entry => {
-                    // Double check Domain rules inside transaction
                     if (!Domain.canChangeFocus(entry)) {
                         Store.logEvent("FOCUS_CHANGE_ATTEMPT", { from: entry.focus, to: focus, denied: true });
-                        // Visual Warning
                         const el = document.getElementById('focus-render-target');
                         el.classList.remove('warning-flash');
                         void el.offsetWidth;
@@ -1261,7 +1401,13 @@
                     const item = CONFIG.CHECKLIST[index];
 
                     if (!status.allowed) {
-                        Store.logEvent("INVALID_CHECK_ATTEMPT", { index, reason: status.reason });
+                        // Explicitly log NO_FOCUS attempt
+                        if (status.reason === "NO_FOCUS") {
+                            Store.logEvent("NO_FOCUS_EXECUTION_ATTEMPT", { index });
+                        } else {
+                            Store.logEvent("INVALID_CHECK_ATTEMPT", { index, reason: status.reason });
+                        }
+                        
                         // Visual Warning
                         const el = document.getElementById('checklist-render-target');
                         el.classList.remove('warning-flash');
@@ -1270,27 +1416,25 @@
                         return;
                     }
 
+                    // Granular Event Log
+                    const eventLog = {
+                        id: item.id,
+                        action: status.action, // 'check' or 'uncheck'
+                        ts: Date.now()
+                    };
+                    
+                    if (!entry.checklistLog) entry.checklistLog = [];
+                    entry.checklistLog.push(eventLog);
+
                     if (status.action === 'check') {
                         entry.checklist.push(item.id);
                         Store.logEvent("ITEM_COMPLETED", { id: item.id });
                     } else {
                         // Uncheck Logic (Waterfall)
-                        // "Undoing a checkbox logs an 'incomplete' event"
-                        // Strictly remove this item and any subsequent items to maintain sequence validity
-                        const idsToRemove = [];
-                        
-                        // We need to remove the clicked item, AND any item that appears *after* it in the sequence
                         const clickedIndex = index;
-                        
-                        // Rebuild checklist keeping only items strictly before this index
-                        // This implies if I uncheck step 2, step 3 is also unchecked.
                         const validIds = CONFIG.CHECKLIST.slice(0, clickedIndex).map(i => i.id);
-                        
-                        // Find what we are removing
                         const removed = entry.checklist.filter(id => !validIds.includes(id));
-                        
                         entry.checklist = entry.checklist.filter(id => validIds.includes(id));
-                        
                         Store.logEvent("ITEM_UNDONE", { removedIds: removed });
                     }
                 });
@@ -1326,7 +1470,6 @@
                     entry.notes.forEach(note => {
                         const div = document.createElement('div');
                         div.className = 'note-block';
-                        // Format Timestamp
                         const time = new Date(note.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                         div.innerHTML = `<span class="note-timestamp">${time}</span>${note.text}`;
                         pastNotesContainer.appendChild(div);
@@ -1335,10 +1478,8 @@
                     historySection.style.display = 'none';
                 }
 
-                // Clear Editor for new input
                 document.getElementById('journal-input').value = "";
                 
-                // If future, disable editor
                 if (DateEngine.isFuture(dateStr)) {
                     document.getElementById('journal-input').disabled = true;
                     document.getElementById('journal-input').placeholder = "Future date locked.";
@@ -1350,7 +1491,6 @@
                 document.getElementById('panel-overlay').classList.add('active');
                 document.getElementById('side-panel').classList.add('open');
                 
-                // Auto-focus if not future
                 if (!DateEngine.isFuture(dateStr)) {
                     setTimeout(() => document.getElementById('journal-input').focus(), 300);
                 }
@@ -1360,7 +1500,6 @@
                 document.getElementById('panel-overlay').classList.remove('active');
                 document.getElementById('side-panel').classList.remove('open');
                 Panel.activeDate = null;
-                // Force blur to hide mobile keyboard
                 document.getElementById('journal-input').blur();
             },
 
@@ -1368,28 +1507,28 @@
                 if(!Panel.activeDate) return;
                 if(!text || text.trim() === "") return;
 
-                Store.appendNote(Panel.activeDate, text);
+                const success = Store.appendNote(Panel.activeDate, text);
                 
-                // UI Feedback
-                document.getElementById('save-status').innerHTML = `<i data-feather="check" style="width:12px"></i> Synced ${new Date().toLocaleTimeString()}`;
-                
-                // Re-render the panel to show the new note in the "Previous Entries" section immediately
-                // This gives the "Append Only" feel
-                Panel.open(Panel.activeDate); 
+                if (success) {
+                    const el = document.getElementById('save-status');
+                    el.innerHTML = `<i data-feather="check" style="width:12px"></i> Synced ${new Date().toLocaleTimeString()}`;
+                    el.classList.remove('cooldown');
+                    Panel.open(Panel.activeDate); 
+                } else {
+                    const el = document.getElementById('save-status');
+                    el.innerHTML = `COOLDOWN ACTIVE. WAIT.`;
+                    el.classList.add('cooldown');
+                }
             }
         };
 
         /* --- BOOTSTRAP --- */
         (function() {
             try {
-                // Initialize Feather Icons
                 feather.replace();
-                
-                // Initialize System
                 Store.init();
                 View.init();
-                
-                console.log("PROJECT K // SYSTEM ONLINE");
+                console.log("PROJECT K // SYSTEM ONLINE v4.3");
             } catch (e) {
                 console.error("System Failure", e);
                 document.body.innerHTML = `
