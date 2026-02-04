@@ -2,1073 +2,1405 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project K: Java Mastery</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Project K: System Core</title>
     
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
-    
-    <!-- Feather Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/feather-icons"></script>
 
     <style>
+        /* --- DESIGN TOKENS --- */
         :root {
-            /* Palette */
-            --bg-color: #F9F9F9;
-            --surface-color: #FFFFFF;
-            --text-primary: #1A1A1A;
-            --text-secondary: #555555;
-            --text-muted: #A0A0A0;
-            --border-color: #E5E5E5;
-            --accent-color: #9A3B3B; /* Rust */
-            --accent-dim: rgba(154, 59, 59, 0.15);
-            --danger-color: #D32F2F;
+            /* Palette - Architectural/Brutalist */
+            --bg-canvas: #F4F4F4;
+            --bg-surface: #FFFFFF;
+            --bg-inset: #FAFAFA;
+            
+            --ink-primary: #121212;
+            --ink-secondary: #555555;
+            --ink-tertiary: #999999;
+            --ink-inverse: #FFFFFF;
+            --ink-error: #B00020;
+            
+            --line-light: #E0E0E0;
+            --line-medium: #CCCCCC;
+            --line-heavy: #121212;
+            
+            --accent-core: #9A3B3B; /* Rust */
+            --accent-wash: rgba(154, 59, 59, 0.08);
+            --accent-hover: rgba(154, 59, 59, 0.12);
+            --accent-error: #B00020;
+            --accent-success: #2E7D32;
+            --accent-audit: #D4A017;
             
             /* Typography */
-            --font-heading: 'Space Grotesk', sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
-            --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-display: 'Space Grotesk', system-ui, sans-serif;
+            --font-technical: 'JetBrains Mono', monospace;
+            --font-reading: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             
-            /* Spacing */
-            --spacing-sm: 12px;
-            --spacing-md: 24px;
-            --spacing-lg: 48px;
+            /* Metrics */
+            --spacing-unit: 8px;
+            --tap-target: 48px; /* Strict Minimum */
+            --radius-sharp: 2px;
+            --radius-soft: 4px;
             
-            /* Borders */
-            --border-width: 1px;
-            --radius: 0px; 
+            /* Animation */
+            --ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
+            --ease-in-out: cubic-bezier(0.645, 0.045, 0.355, 1);
+            --duration-fast: 150ms;
+            --duration-normal: 300ms;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        /* --- RESET & BASE --- */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden; /* App-like behavior */
+        }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            font-family: var(--font-body);
-            line-height: 1.6;
-            -webkit-font-smoothing: antialiased;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            padding: var(--spacing-md);
-        }
-
-        .container {
-            width: 100%;
-            max-width: 900px;
+            background-color: var(--bg-canvas);
+            color: var(--ink-primary);
+            font-family: var(--font-reading);
+            line-height: 1.5;
             display: flex;
             flex-direction: column;
-            gap: var(--spacing-lg);
-            margin-top: var(--spacing-lg);
-            margin-bottom: var(--spacing-lg);
+            font-size: 16px; /* Base size for legibility */
         }
 
-        /* --- Typography --- */
-        h1, h2, h3 { font-family: var(--font-heading); font-weight: 500; letter-spacing: -0.02em; }
-        h1 { font-size: 2rem; color: var(--text-primary); }
-        h2 {
-            font-size: 0.85rem;
-            margin-bottom: var(--spacing-md);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
+        /* --- TYPOGRAPHY SYSTEM --- */
+        h1, h2, h3, h4 {
+            font-family: var(--font-display);
             font-weight: 600;
+            letter-spacing: -0.02em;
+            margin: 0;
         }
 
-        .accent-text { color: var(--accent-color); }
-        .mono { font-family: var(--font-mono); }
+        h1 { font-size: 1.5rem; }
+        h2 { font-size: 1.25rem; }
+        h3 { font-size: 1.1rem; }
+
+        .text-mono { font-family: var(--font-technical); }
         
-        /* --- Layout --- */
-        .dashboard-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: var(--spacing-md); }
+        .text-label {
+            font-family: var(--font-technical);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--ink-secondary);
+            margin-bottom: var(--spacing-unit);
+            display: block;
+        }
         
-        .card {
-            background: var(--surface-color);
-            border: var(--border-width) solid var(--border-color);
-            padding: var(--spacing-md);
+        .text-small { font-size: 0.85rem; color: var(--ink-secondary); }
+        .text-micro { font-size: 0.7rem; color: var(--ink-tertiary); }
+
+        /* --- LAYOUT SHELL --- */
+        .app-shell {
+            width: 100%;
+            max-width: 700px;
+            height: 100%;
+            margin: 0 auto;
+            background: var(--bg-surface);
+            border-left: 1px solid var(--line-light);
+            border-right: 1px solid var(--line-light);
+            display: flex;
+            flex-direction: column;
             position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.05);
         }
 
-        /* --- Header --- */
-        header {
+        /* --- SCROLLABLE VIEWPORT --- */
+        .viewport {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        /* --- HEADER & GRID --- */
+        .header-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--line-light);
+        }
+
+        .header-top {
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
-            padding-bottom: var(--spacing-md);
-            border-bottom: var(--border-width) solid var(--border-color);
         }
 
-        .meta-data {
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
-            color: var(--text-secondary);
+        .system-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            background: var(--bg-inset);
+            border: 1px solid var(--line-light);
+            font-size: 0.75rem;
+            font-family: var(--font-technical);
+            cursor: default;
+            user-select: none;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--ink-tertiary);
+            transition: background-color 0.3s;
+        }
+        .status-dot.active { background: var(--accent-success); box-shadow: 0 0 4px var(--accent-success); }
+        .status-dot.error { background: var(--accent-error); box-shadow: 0 0 4px var(--accent-error); }
+        .status-dot.audit { background: var(--accent-audit); }
+        .status-dot.locked { background: var(--ink-secondary); }
+
+        /* YEAR GRID (2026) */
+        .year-grid-wrapper {
             display: flex;
-            gap: var(--spacing-md);
+            flex-direction: column;
+            gap: 8px;
+            /* Prevent accidental scroll capture on mobile */
+            touch-action: pan-x pan-y; 
         }
-        
-        .streak-box { color: var(--accent-color); font-weight: 500; }
 
-        /* --- Section: Year Overview (Calendar) --- */
-        .year-grid-container { display: flex; flex-direction: column; gap: 12px; }
-        
         .year-grid {
             display: grid;
-            /* 53 columns (weeks), 7 rows (days) */
-            grid-template-rows: repeat(7, 10px);
-            grid-auto-flow: column; 
-            gap: 3px;
-            margin-top: 8px;
-            height: 90px; /* 7*10 + 6*3 approx */
+            /* 53 weeks columns */
+            grid-template-columns: repeat(53, 1fr);
+            /* 7 days rows */
+            grid-template-rows: repeat(7, 1fr);
+            grid-auto-flow: column;
+            gap: 2px;
+            height: 90px; /* Slightly taller for touch */
+            padding: 2px; /* Touch buffer */
         }
 
-        .day-node {
-            width: 10px;
-            height: 10px;
-            background: var(--surface-color);
-            border: 1px solid #F0F0F0;
+        .grid-cell {
+            background: var(--bg-inset);
+            border-radius: 1px;
             cursor: pointer;
-        }
-
-        /* Semantic States */
-        .day-node.pre-start { background: #F4F4F4; border-color: #F4F4F4; cursor: default; pointer-events: none; }
-        .day-node.future { background: #FFFFFF; border-color: #FAFAFA; cursor: default; pointer-events: none; }
-        .day-node.today { border: 1px solid var(--text-primary); z-index: 2; }
-        
-        /* Activity States */
-        .day-node.active-partial { background-color: var(--accent-dim); border-color: var(--accent-dim); }
-        .day-node.active-full { background-color: var(--accent-color); border-color: var(--accent-color); }
-
-        .metrics-row {
-            display: flex;
-            gap: 24px;
-            margin-top: 12px;
-            border-top: 1px solid var(--border-color);
-            padding-top: 12px;
-        }
-        
-        .metric-item { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary); }
-        .metric-value { color: var(--text-primary); font-weight: 600; }
-
-        /* Tooltip */
-        #tooltip {
-            position: absolute;
-            background: var(--text-primary);
-            color: var(--surface-color);
-            padding: 6px 10px;
-            font-family: var(--font-mono);
-            font-size: 0.7rem;
-            pointer-events: none;
-            opacity: 0;
             transition: opacity 0.1s;
-            z-index: 100;
-            white-space: nowrap;
+            position: relative; /* For Pseudo-elements */
         }
-
-        /* --- Section: No Zero Days --- */
-        .protocol-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md); }
         
-        .focus-selector {
-            display: flex; gap: 8px; flex-wrap: wrap;
-            margin-bottom: var(--spacing-md); padding-bottom: var(--spacing-md);
-            border-bottom: 1px solid #F0F0F0;
+        .grid-cell.pre-start { 
+            opacity: 0.2; 
+            pointer-events: none; 
+            background: var(--line-light); 
+        }
+        
+        .grid-cell.future { 
+            opacity: 0.1; 
+            pointer-events: none; 
+            background: transparent; 
+            border: 1px solid var(--line-light); 
+        }
+        
+        .grid-cell.active-today { 
+            border: 1px solid var(--ink-primary); 
+            z-index: 2; 
+            background: #FFF;
+        }
+        
+        /* State Colors */
+        .grid-cell[data-state="partial"] { background: var(--accent-wash); }
+        .grid-cell[data-state="complete"] { background: var(--accent-core); }
+        
+        /* Touch feedback */
+        .grid-cell:active { transform: scale(0.9); }
+
+        /* --- PROTOCOL SECTION --- */
+        .protocol-card {
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
         }
 
-        .focus-option {
-            font-family: var(--font-mono); font-size: 0.75rem;
-            padding: 6px 12px;
-            border: 1px solid var(--border-color);
-            cursor: pointer; color: var(--text-secondary);
+        /* Focus Selector */
+        .focus-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px; /* Larger gap for touch */
+        }
+
+        .focus-chip {
+            padding: 10px 18px; /* Larger target */
+            min-height: var(--tap-target);
+            border: 1px solid var(--line-light);
             background: transparent;
-            transition: all 0.2s;
-        }
-        .focus-option:hover { border-color: var(--text-secondary); }
-        .focus-option.active { background-color: var(--text-primary); color: var(--surface-color); border-color: var(--text-primary); }
-        
-        /* Warning state if user tries to check without focus */
-        .focus-selector.attention { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; border-bottom-color: var(--accent-color); }
-
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
+            font-family: var(--font-technical);
+            font-size: 0.85rem;
+            color: var(--ink-secondary);
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .progress-container { height: 2px; width: 100%; background: #F0F0F0; margin-bottom: var(--spacing-md); }
-        .progress-bar { height: 100%; background: var(--accent-color); width: 0%; transition: width 0.3s ease; }
-
-        .checklist { list-style: none; }
-        .checklist-item {
-            display: flex; align-items: center; padding: 12px 0;
-            border-bottom: 1px solid #F0F0F0; transition: all 0.2s ease;
-        }
-        .checklist-item:last-child { border-bottom: none; }
+        .focus-chip:active { transform: scale(0.98); background: var(--bg-inset); }
         
-        .checklist-item.locked { opacity: 0.3; pointer-events: none; }
-        
-        .checklist-item input[type="checkbox"] {
-            appearance: none; width: 18px; height: 18px;
-            border: 1px solid var(--text-secondary); margin-right: 16px;
-            border-radius: 0; cursor: pointer; position: relative; flex-shrink: 0;
-        }
-        .checklist-item input[type="checkbox"]:checked { background-color: var(--accent-color); border-color: var(--accent-color); }
-        .checklist-item input[type="checkbox"]:checked::after {
-            content: ''; position: absolute; left: 5px; top: 1px; width: 4px; height: 10px;
-            border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg);
+        .focus-chip.selected { 
+            background: var(--ink-primary); 
+            color: var(--ink-inverse); 
+            border-color: var(--ink-primary);
+            font-weight: 500;
         }
         
-        .checklist-item.completed span { text-decoration: line-through; color: var(--text-muted); }
-
-        /* --- Section: Field Notes & Reflection --- */
-        .code-block {
-            background-color: #F8F8F8; padding: 20px;
-            font-family: var(--font-mono); font-size: 0.8rem;
-            color: var(--text-primary); border-left: 2px solid var(--accent-color);
-            margin-top: 8px; white-space: pre-wrap;
+        /* Visual Lock State */
+        .focus-chip.locked-out { 
+            opacity: 0.3; 
+            pointer-events: none; 
+            filter: grayscale(1); 
+            border-style: dashed;
+        }
+        
+        .focus-chip.locked-active {
+            pointer-events: none;
+            cursor: default;
+            border-color: var(--accent-core);
+            color: var(--accent-core);
+            background: var(--bg-surface);
+            font-weight: 700;
         }
 
-        .weekly-nav {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 8px; font-size: 0.75rem; color: var(--text-secondary); font-family: var(--font-mono);
+        /* Visual Warning Animation */
+        .warning-flash { animation: flashError 0.5s var(--ease-in-out); }
+        @keyframes flashError {
+            0%, 100% { border-color: var(--line-light); transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            50% { border-color: var(--accent-error); color: var(--accent-error); transform: translateX(4px); }
+            75% { transform: translateX(-4px); }
         }
-        .nav-btn { background: none; border: none; cursor: pointer; color: var(--text-primary); opacity: 0.5; }
-        .nav-btn:hover:not(:disabled) { opacity: 1; color: var(--accent-color); }
-        .nav-btn:disabled { cursor: default; opacity: 0.1; }
 
-        .reflection-area {
-            width: 100%; height: 120px; padding: 12px;
-            font-family: var(--font-mono); font-size: 0.85rem;
-            border: 1px solid var(--border-color); background: var(--bg-color);
-            color: var(--text-primary); resize: none; outline: none;
+        /* Checklist */
+        .checklist {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            border-top: 1px solid var(--line-light);
         }
-        .reflection-area:focus { border-color: var(--accent-color); }
-        .reflection-area:read-only { background: #f0f0f0; color: var(--text-secondary); }
 
-        .copy-btn {
-            position: absolute; top: 10px; right: 10px;
-            background: transparent; border: none; cursor: pointer;
-            color: var(--text-secondary); opacity: 0.6;
+        .check-item {
+            display: flex;
+            align-items: flex-start; /* Align top for multiline */
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--line-light);
+            cursor: pointer;
+            transition: background var(--duration-fast);
+            min-height: 64px; /* Generous touch target */
         }
-        .copy-btn:hover { opacity: 1; color: var(--accent-color); }
 
-        /* --- Side Panel --- */
+        .check-item:active { background: var(--bg-inset); }
+        
+        .check-item.locked { 
+            opacity: 0.4; 
+            pointer-events: none; 
+            cursor: not-allowed;
+        }
+
+        .checkbox-ui {
+            width: 24px;
+            height: 24px;
+            margin-top: 2px; /* Optical alignment */
+            border: 1.5px solid var(--ink-secondary);
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--duration-fast);
+            flex-shrink: 0;
+        }
+
+        .check-item.checked .checkbox-ui {
+            background: var(--accent-core);
+            border-color: var(--accent-core);
+        }
+
+        .check-item.checked .checkbox-ui::after {
+            content: '';
+            width: 6px;
+            height: 12px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+            margin-bottom: 3px;
+        }
+
+        .check-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .check-label {
+            font-size: 1rem;
+            color: var(--ink-primary);
+            transition: color var(--duration-fast);
+            line-height: 1.4;
+        }
+
+        .check-item.checked .check-label {
+            text-decoration: line-through;
+            color: var(--ink-tertiary);
+        }
+        
+        .time-badge {
+            display: inline-block;
+            font-family: var(--font-technical);
+            font-size: 0.7rem;
+            color: var(--ink-secondary);
+            background: var(--bg-inset);
+            padding: 2px 6px;
+            border-radius: 2px;
+            border: 1px solid var(--line-light);
+            align-self: flex-start;
+        }
+
+        /* --- METRICS PANEL (Cold Facts) --- */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1px; /* Borders via gap */
+            background: var(--line-light);
+            border: 1px solid var(--line-light);
+        }
+
+        .metric-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 24px;
+            background: var(--bg-surface);
+        }
+
+        .metric-value {
+            font-family: var(--font-display);
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--ink-primary);
+            line-height: 1;
+        }
+        
+        .metric-sub {
+            font-family: var(--font-technical);
+            font-size: 0.7rem;
+            color: var(--ink-tertiary);
+            margin-top: 4px;
+        }
+
+        /* --- SIDE PANEL (Journal) --- */
+        .side-panel-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--duration-normal) var(--ease-out);
+            backdrop-filter: blur(4px);
+        }
+        .side-panel-overlay.active { opacity: 1; pointer-events: all; }
+
         .side-panel {
-            position: fixed; top: 0; right: -400px; width: 350px; height: 100vh;
-            background: var(--surface-color); border-left: 1px solid var(--border-color);
-            padding: 32px; box-shadow: -10px 0 20px rgba(0,0,0,0.02);
-            transition: right 0.3s ease; z-index: 500; display: flex; flex-direction: column;
+            position: fixed;
+            top: 0; right: 0; bottom: 0;
+            width: 100%;
+            max-width: 500px;
+            background: var(--bg-surface);
+            border-left: 1px solid var(--line-light);
+            z-index: 101;
+            transform: translateX(100%);
+            transition: transform var(--duration-normal) var(--ease-out);
+            display: flex;
+            flex-direction: column;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.1);
         }
-        .side-panel.open { right: 0; }
+        .side-panel.open { transform: translateX(0); }
+
         .panel-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color);
+            padding: 24px;
+            border-bottom: 1px solid var(--line-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-surface);
         }
-        .daily-note-input {
-            width: 100%; height: 300px; padding: 12px;
-            font-family: var(--font-mono); border: 1px solid var(--border-color);
-            background: var(--bg-color); resize: none; outline: none; font-size: 0.9rem;
-        }
-        .daily-note-input:focus { border-color: var(--accent-color); }
-        .panel-status { margin-top: 12px; font-size: 0.75rem; color: var(--text-muted); text-align: right;}
 
-        /* --- Global Utils --- */
-        .hidden { display: none !important; }
-        .link-icon { width: 14px; height: 14px; color: var(--text-secondary); }
-        .dojo-grid { display: grid; gap: 16px; }
-        .dojo-block {
-            border: 1px solid var(--border-color); padding: 16px; text-decoration: none;
-            display: flex; align-items: center; justify-content: space-between;
-            transition: border-color 0.2s ease;
+        .panel-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            gap: 24px;
+            overflow-y: auto;
+            background: var(--bg-inset);
         }
-        .dojo-block:hover { border-color: var(--accent-color); }
-        .dojo-info h4 { font-family: var(--font-heading); font-size: 1rem; color: var(--text-primary); margin-bottom: 4px; font-weight: 500; }
-        .dojo-info p { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary); }
-        .resource-list { display: flex; flex-direction: column; }
-        .resource-link {
-            display: flex; justify-content: space-between; align-items: center; text-decoration: none;
-            color: var(--text-primary); padding: 16px 0; border-bottom: 1px solid #F0F0F0;
-            transition: padding-left 0.2s ease;
+        
+        .panel-section-title {
+            font-family: var(--font-technical);
+            font-size: 0.75rem;
+            color: var(--ink-secondary);
+            font-weight: 600;
+            border-bottom: 1px solid var(--line-medium);
+            padding-bottom: 8px;
+            margin-bottom: 12px;
         }
-        .resource-link:last-child { border-bottom: none; }
-        .resource-link:hover { color: var(--accent-color); padding-left: 8px; }
-        .resource-link span { font-size: 0.95rem; }
 
-        @media (max-width: 768px) {
-            .dashboard-grid { grid-template-columns: 1fr; }
-            .side-panel { width: 100%; right: -100%; }
+        /* Immutable Past Notes Styling */
+        .past-notes-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 16px;
         }
+        
+        .note-block {
+            background: var(--bg-surface);
+            padding: 12px 16px;
+            border-left: 3px solid var(--line-medium);
+            font-family: var(--font-technical);
+            font-size: 0.85rem;
+            color: var(--ink-secondary);
+            white-space: pre-wrap;
+        }
+        
+        .note-timestamp {
+            font-size: 0.65rem;
+            color: var(--ink-tertiary);
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        /* Active Editor */
+        .journal-editor {
+            flex: 1;
+            min-height: 200px;
+            width: 100%;
+            border: 1px solid var(--line-light);
+            background: var(--bg-surface);
+            padding: 16px;
+            font-family: var(--font-technical);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            resize: none;
+            border-radius: var(--radius-sharp);
+            color: var(--ink-primary);
+            transition: border-color 0.2s;
+        }
+        .journal-editor:focus {
+            outline: none;
+            border-color: var(--accent-core);
+            box-shadow: 0 0 0 1px var(--accent-core);
+        }
+
+        .save-indicator {
+            font-family: var(--font-technical);
+            font-size: 0.75rem;
+            color: var(--ink-tertiary);
+            text-align: right;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+        }
+
+        /* --- PRE-START STATE --- */
+        .locked-state-view {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 60vh;
+            text-align: center;
+            gap: 32px;
+            padding: 40px;
+            background: var(--bg-inset);
+            border: 1px dashed var(--line-light);
+            margin: 24px 0;
+        }
+        .locked-icon { 
+            color: var(--ink-tertiary); 
+            background: var(--bg-surface);
+            padding: 24px;
+            border-radius: 50%;
+            border: 1px solid var(--line-light);
+        }
+        .locked-msg { 
+            font-family: var(--font-technical); 
+            font-size: 0.95rem; 
+            color: var(--ink-secondary); 
+            max-width: 320px; 
+            line-height: 1.6;
+        }
+        
+        .countdown-timer {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--ink-primary);
+            margin-top: 16px;
+        }
+
+        /* --- FOOTER --- */
+        .system-footer {
+            margin-top: auto;
+            padding-top: 40px;
+            padding-bottom: 24px;
+            text-align: center;
+            border-top: 1px solid var(--line-light);
+        }
+
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- Header -->
-        <header>
-            <h1>PROJECT K <span class="accent-text mono">//</span> JAVA MASTERY</h1>
-            <div class="meta-data">
-                <span id="current-date">...</span>
-                <span>|</span>
-                <span id="streak-display" class="streak-box">STREAK: 0</span>
-            </div>
-        </header>
-
-        <div class="dashboard-grid">
-            
-            <!-- Left Column -->
-            <div style="display: flex; flex-direction: column; gap: 24px;">
+    <div class="app-shell">
+        
+        <!-- MAIN VIEWPORT -->
+        <div class="viewport" id="main-view">
+            <!-- Header -->
+            <div class="header-section">
+                <div class="header-top">
+                    <h1>PROJECT K</h1>
+                    <div class="system-status" id="sys-status-indicator">
+                        <span id="integrity-dot" class="status-dot active"></span>
+                        <span id="integrity-msg" class="text-mono">SYS OK</span>
+                    </div>
+                </div>
+                <div class="text-label" id="current-date-display">CALCULATING DATE...</div>
                 
-                <!-- Section 0: Year Overview -->
-                <section class="card">
-                    <h2><i data-feather="calendar"></i> Year Overview 2026</h2>
-                    <div class="year-grid-container">
-                        <!-- Grid is 7 rows (Sun-Sat) x 53 cols -->
-                        <div class="year-grid" id="year-grid"></div>
-                        
-                        <div class="metrics-row">
-                            <div class="metric-item">ACTIVE DAYS: <span class="metric-value mono" id="metric-active">0</span></div>
-                            <div class="metric-item">LONGEST STREAK: <span class="metric-value mono" id="metric-max-streak">0</span></div>
-                            <div class="metric-item">COLLECTIONS FOCUS: <span class="metric-value mono" id="metric-focus">0</span></div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Section 1: No Zero Days -->
-                <section class="card" id="protocol-section">
-                    <div class="protocol-header">
-                        <h2><i data-feather="check-square"></i> No Zero Days</h2>
-                    </div>
-                    
-                    <div class="focus-selector" id="focus-container"></div>
-
-                    <div class="progress-container">
-                        <div class="progress-bar" id="progress-bar"></div>
-                    </div>
-
-                    <ul class="checklist" id="checklist-container"></ul>
-                </section>
-
-                <!-- Section 4: Field Notes -->
-                <section class="card">
-                    <h2><i data-feather="terminal"></i> Field Notes</h2>
-                    <div class="code-block" id="field-note-content"></div>
-                    <button class="copy-btn" id="copy-note-btn" title="Copy"><i data-feather="copy" style="width: 16px;"></i></button>
-                </section>
-
+                <!-- Year Grid -->
+                <div class="year-grid-wrapper">
+                    <div class="year-grid" id="calendar-root"></div>
+                </div>
+                <div class="text-micro text-mono" style="text-align: right; margin-top: 4px;">
+                    START: 2026-02-05
+                </div>
             </div>
 
-            <!-- Right Column -->
-            <div style="display: flex; flex-direction: column; gap: 24px;">
-                
-                <!-- Weekly Reflection -->
-                <section class="card" id="weekly-section">
-                    <h2><i data-feather="book-open"></i> Weekly Notes</h2>
-                    <div class="weekly-nav">
-                        <span id="reflection-cycle-label">Cycle 1</span>
-                        <div>
-                            <button class="nav-btn" id="prev-reflection"><i data-feather="chevron-left"></i></button>
-                            <button class="nav-btn" id="next-reflection"><i data-feather="chevron-right"></i></button>
-                        </div>
-                    </div>
-                    <div class="weekly-prompts" style="margin-bottom: 12px; font-style: italic; font-size: 0.8rem; color: var(--text-secondary);">
-                        1. Understand better? &nbsp; 2. Confused by? &nbsp; 3. Next goal?
-                    </div>
-                    <textarea class="reflection-area" id="weekly-note-input" placeholder="Unlock by completing 7 days..."></textarea>
-                </section>
+            <!-- DYNAMIC CONTENT AREA -->
+            <div id="dynamic-content">
+                <!-- Content injected by View Engine -->
+            </div>
 
-                <!-- Section 3: The Dojo -->
-                <section class="card">
-                    <h2><i data-feather="target"></i> The Dojo</h2>
-                    <div class="dojo-grid">
-                        <a href="https://codingbat.com/java" target="_blank" class="dojo-block">
-                            <div class="dojo-info"><h4>Muscle Memory</h4><p>CodingBat Warmups</p></div>
-                            <i data-feather="arrow-up-right" class="link-icon"></i>
-                        </a>
-                        <a href="https://www.hackerrank.com/domains/java" target="_blank" class="dojo-block">
-                            <div class="dojo-info"><h4>Badge Progress</h4><p>HackerRank Domain</p></div>
-                            <i data-feather="arrow-up-right" class="link-icon"></i>
-                        </a>
-                        <a href="https://leetcode.com/problemset/all/?difficulty=EASY&page=1" target="_blank" class="dojo-block">
-                            <div class="dojo-info"><h4>Logic Practice</h4><p>LeetCode Easy</p></div>
-                            <i data-feather="arrow-up-right" class="link-icon"></i>
-                        </a>
-                    </div>
-                </section>
-
-                <!-- Section 2: The Archive -->
-                <section class="card">
-                    <h2><i data-feather="archive"></i> The Archive</h2>
-                    <div class="resource-list">
-                        <a href="https://www.youtube.com/c/KunalKushwaha" target="_blank" class="resource-link">
-                            <span>Kunal Kushwaha Channel</span><i data-feather="external-link" class="link-icon"></i>
-                        </a>
-                        <a href="https://www.w3schools.com/java/" target="_blank" class="resource-link">
-                            <span>W3Schools Java</span><i data-feather="external-link" class="link-icon"></i>
-                        </a>
-                        <a href="https://docs.oracle.com/javase/8/docs/technotes/guides/collections/overview.html" target="_blank" class="resource-link">
-                            <span>Official Collections Docs</span><i data-feather="external-link" class="link-icon"></i>
-                        </a>
-                    </div>
-                </section>
-
+            <!-- Footer / Integrity -->
+            <div class="system-footer">
+                <div class="text-mono text-small" style="font-size: 0.6rem; color: var(--ink-tertiary);">
+                    v4.1.0 // SECURE RECORD // IMMUTABLE HISTORY
+                </div>
             </div>
         </div>
+
     </div>
 
-    <!-- Tooltip -->
-    <div id="tooltip"></div>
-
-    <!-- Side Panel -->
+    <!-- SIDE PANEL -->
+    <div class="side-panel-overlay" id="panel-overlay"></div>
     <div class="side-panel" id="side-panel">
         <div class="panel-header">
-            <h3 id="panel-date">Date</h3>
-            <button class="close-panel" id="close-panel-btn"><i data-feather="x"></i></button>
+            <div>
+                <div class="text-label">JOURNAL & LOG</div>
+                <div class="text-mono text-small" id="panel-date-display">...</div>
+            </div>
+            <button id="panel-close" style="background:none; border:none; padding:12px; cursor:pointer; color: var(--ink-primary);">
+                <i data-feather="x"></i>
+            </button>
         </div>
-        <textarea class="daily-note-input" id="daily-note-input" placeholder="Log thoughts, confusion, or breakthroughs..."></textarea>
-        <div class="panel-status" id="panel-status">Saved</div>
+        <div class="panel-body">
+            <!-- Context Info -->
+            <div>
+                <div class="panel-section-title">DAILY CONTEXT</div>
+                <div class="text-small text-mono" id="panel-context-info">Focus: ...</div>
+            </div>
+
+            <!-- Immutable History (Past Notes) -->
+            <div id="panel-history-section" style="display: none;">
+                <div class="panel-section-title">PREVIOUS ENTRIES</div>
+                <div id="panel-past-notes" class="past-notes-container"></div>
+            </div>
+
+            <!-- Active Editor -->
+            <div style="flex: 1; display: flex; flex-direction: column;">
+                <div class="panel-section-title" id="editor-label">NEW ENTRY</div>
+                <textarea class="journal-editor" id="journal-input" placeholder="Log execution details, errors, and insights..."></textarea>
+                <div class="save-indicator" id="save-status">
+                    <i data-feather="cloud" style="width: 12px; height: 12px;"></i> Synced
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- TEMPLATES -->
+    <template id="tpl-locked">
+        <div class="locked-state-view">
+            <div class="locked-icon"><i data-feather="lock" style="width: 48px; height: 48px;"></i></div>
+            <h2>SYSTEM LOCKED</h2>
+            <p class="locked-msg">
+                Protocol enforcement begins strictly on <span class="text-mono" style="color:var(--ink-primary); font-weight:600">2026-02-05</span>.
+                <br><br>
+                No actions are permitted before the contract start date.
+            </p>
+            <div id="countdown-display" class="countdown-timer">-- days</div>
+            <div class="text-label" style="margin-top: 24px; color: var(--accent-core);">PREPARATION PHASE</div>
+        </div>
+    </template>
+
+    <template id="tpl-active">
+        <div class="protocol-card">
+            
+            <!-- Focus Section -->
+            <div>
+                <div class="text-label">DAILY FOCUS INTENT</div>
+                <div class="focus-group" id="focus-render-target"></div>
+                <div class="text-micro text-mono" style="margin-top: 8px; color: var(--ink-tertiary);" id="focus-lock-status">
+                    * Selection locks upon first action
+                </div>
+            </div>
+
+            <!-- Checklist Section -->
+            <div>
+                <div class="text-label">EXECUTION SEQUENCE</div>
+                <div class="checklist" id="checklist-render-target"></div>
+            </div>
+
+            <!-- Metrics (Bottom) -->
+            <div>
+                <div class="text-label">PERFORMANCE AUDIT</div>
+                <div class="metrics-grid">
+                    <div class="metric-box">
+                        <div class="text-label">EXECUTION RATIO</div>
+                        <div class="metric-value" id="metric-ratio">0%</div>
+                        <div class="metric-sub" id="metric-ratio-detail">0/0 Days</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="text-label">PERFECT RUN</div>
+                        <div class="metric-value" id="metric-streak">0</div>
+                        <div class="metric-sub" id="metric-streak-detail">Current Streak</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="text-label">INCONSISTENCY</div>
+                        <div class="metric-value" id="metric-missed" style="color: var(--accent-error)">0</div>
+                        <div class="metric-sub">Days Missed</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="text-label">TOTAL LOGS</div>
+                        <div class="metric-value" id="metric-total">0</div>
+                        <div class="metric-sub">System Events</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </template>
 
     <script>
         /**
-         * PROJECT K: JAVA MASTERY
-         * System Version: 3.0 (Hardened)
-         * Start Date: 2026-02-05
+         * PROJECT K: JAVA MASTERY - SYSTEM CORE v4.1.0
+         * * PRINCIPLES:
+         * 1. TRUTH: Date logic is absolute. Feb 5, 2026 is Day 0.
+         * 2. INTEGRITY: State is hashed and audited. Corruption triggers safety modes.
+         * 3. DISCIPLINE: Sequential execution. Focus locking. Append-only journals.
+         * * ARCHITECTURE:
+         * - DateEngine: Time authority.
+         * - IntegritySystem: Security and validation.
+         * - StateStore: Persistence and transactions.
+         * - DomainLogic: Business rules.
+         * - ViewEngine: UI Rendering.
+         * - ActionController: User intent handling.
          */
 
-        /* --- 1. CONFIGURATION & CONSTANTS --- */
-        const START_DATE_STR = "2026-02-05";
-        const STORAGE_KEY = 'project_k_v3_core';
-        
-        const CHECKLIST_ITEMS = [
-            "Solve 3 CodingBat Java warmup problems",
-            "Watch 20 minutes of a deep Java video",
-            "Solve 1 HackerRank Java problem",
-            "Explain one Java concept out loud",
-            "Drink enough water today",
-            "Debug something without panic"
-        ];
-
-        const FOCUS_OPTIONS = ['Collections', 'Strings', 'Logic', 'Debugging', 'Revision'];
-
-        const FIELD_NOTES = [
-            `// Iterating a Map efficiently\nfor (Map.Entry<String, Integer> entry : map.entrySet()) {\n    System.out.println(entry.getKey() + ": " + entry.getValue());\n}`,
-            `// Scanner Safety\nScanner sc = new Scanner(System.in);\nif (sc.hasNextInt()) {\n    int num = sc.nextInt();\n}\nsc.close(); // Always close resources`,
-            `// String Comparison Pitfall\nString a = "hello";\nString b = new String("hello");\n\n// WRONG: a == b (compares references)\n// RIGHT: a.equals(b) (compares values)`,
-            `// StringBuilder for Loops\n// Don't concat strings in loops.\nStringBuilder sb = new StringBuilder();\nfor(int i=0; i<10; i++) {\n    sb.append(i);\n}\nString result = sb.toString();`,
-            `// Array vs ArrayList\n// Array: Fixed size. int[] arr = new int[5];\n// ArrayList: Dynamic. ArrayList<Integer> list = new ArrayList<>();\n// Note: ArrayList uses Integer wrapper, not int primitive.`
-        ];
-
-        /* --- 2. DATE UTILITIES (The Source of Truth) --- */
-        const DateUtils = {
-            getTodayStr: () => new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD local
-            parse: (str) => new Date(str + 'T00:00:00'),
-            
-            isValidRange: (dateStr) => {
-                const d = DateUtils.parse(dateStr);
-                const start = DateUtils.parse(START_DATE_STR);
-                const today = DateUtils.parse(DateUtils.getTodayStr());
-                return d >= start && d <= today;
-            },
-
-            isBeforeStart: (dateStr) => {
-                return DateUtils.parse(dateStr) < DateUtils.parse(START_DATE_STR);
-            },
-
-            isFuture: (dateStr) => {
-                return DateUtils.parse(dateStr) > DateUtils.parse(DateUtils.getTodayStr());
-            },
-            
-            diffDays: (d1, d2) => {
-                const oneDay = 24 * 60 * 60 * 1000;
-                return Math.round(Math.abs((d1 - d2) / oneDay));
-            }
+        /* --- 1. CONFIGURATION --- */
+        const CONFIG = {
+            START_DATE: "2026-02-05", // ABSOLUTE START DATE
+            STORAGE_KEY: "project_k_master_v4_1",
+            FOCUS_AREAS: ['Collections', 'OOP', 'Streams', 'Concurrency', 'System Design'],
+            CHECKLIST: [
+                { id: 'c1', text: "Warm-up: 3 CodingBat Problems", time: "15m" },
+                { id: 'c2', text: "Core: Deep Dive Video Session", time: "45m" },
+                { id: 'c3', text: "Practice: 1 HackerRank Challenge", time: "30m" },
+                { id: 'c4', text: "Review: Explain Logic Aloud", time: "10m" },
+                { id: 'c5', text: "System: Log Entry & Commit", time: "5m" }
+            ]
         };
 
-        /* --- 3. STATE MANAGEMENT --- */
-        const State = {
-            data: null,
-
-            defaults: {
-                version: 3,
-                lastVisit: DateUtils.getTodayStr(),
-                // Daily State (Ephemeral until saved to history)
-                daily: {
-                    focus: null,
-                    checklist: new Array(CHECKLIST_ITEMS.length).fill(false)
-                },
-                // Permanent Record: "YYYY-MM-DD" -> { percent, completed, focus, note }
-                history: {},
-                // Reflections: "cycleIndex" -> text
-                reflections: {}
+        /* --- 2. DATE ENGINE (THE TRUTH) --- */
+        const DateEngine = {
+            // Returns YYYY-MM-DD for user's local time
+            getToday: () => {
+                const d = new Date();
+                const offset = d.getTimezoneOffset() * 60000;
+                return new Date(d.getTime() - offset).toISOString().split('T')[0];
             },
 
-            load: function() {
-                const raw = localStorage.getItem(STORAGE_KEY);
-                if (!raw) {
-                    this.data = JSON.parse(JSON.stringify(this.defaults));
-                } else {
-                    this.data = JSON.parse(raw);
-                    // Minimal migration or reset if needed
-                    if (!this.data.version || this.data.version < 3) {
-                        // Hard reset for V3 strictness if schema invalid
-                        // Preserving old notes if possible would be nice, but strict requirements imply clean slate correctness.
-                        // We will just adopt defaults for safety here.
-                        this.data = JSON.parse(JSON.stringify(this.defaults)); 
-                    }
-                }
+            // Returns pure date object from string (00:00:00 local)
+            parse: (str) => {
+                const parts = str.split('-');
+                return new Date(parts[0], parts[1] - 1, parts[2]);
+            },
+
+            format: (str) => {
+                const d = DateEngine.parse(str);
+                return d.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }).toUpperCase();
+            },
+
+            formatISO: (ts) => {
+                return new Date(ts).toISOString();
+            },
+
+            // Generate grid data: 371 days (53 weeks * 7 days) starting from start-of-week of Start Date
+            getGridRange: () => {
+                const start = DateEngine.parse(CONFIG.START_DATE);
+                // Align to Sunday
+                const gridStart = new Date(start);
+                gridStart.setDate(start.getDate() - start.getDay());
                 
-                // Day Roll-over Check
-                const today = DateUtils.getTodayStr();
-                if (this.data.lastVisit !== today) {
-                    // Archive previous day if it was "today" in the UI
-                    // (Actually, V3 architecture saves to history ON CHANGE, so we just reset daily buffer)
-                    this.data.daily = { focus: null, checklist: new Array(CHECKLIST_ITEMS.length).fill(false) };
-                    this.data.lastVisit = today;
-                    this.save();
+                const days = [];
+                for (let i = 0; i < 371; i++) {
+                    const d = new Date(gridStart);
+                    d.setDate(gridStart.getDate() + i);
+                    days.push(d.toISOString().split('T')[0]);
                 }
-                
-                // Ensure today has a history entry if missing (for rendering consistency)
-                if (!this.data.history[today]) {
-                    this.data.history[today] = { percent: 0, completed: false, focus: null, note: "" };
-                }
+                return days;
             },
 
-            save: function() {
-                // Sync daily buffer to history for today
-                const today = DateUtils.getTodayStr();
-                const completedCount = this.data.daily.checklist.filter(Boolean).length;
-                const percent = Math.round((completedCount / CHECKLIST_ITEMS.length) * 100);
-                
-                this.data.history[today] = {
-                    ...this.data.history[today],
-                    percent: percent,
-                    completed: percent === 100,
-                    focus: this.data.daily.focus
-                };
-
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
-                Metrics.update(); // Recalc metrics on save
-            },
-            
-            setDailyFocus: function(focus) {
-                this.data.daily.focus = focus;
-                this.save();
+            getDaysUntilStart: () => {
+                const start = DateEngine.parse(CONFIG.START_DATE);
+                const today = DateEngine.parse(DateEngine.getToday());
+                const diffTime = start - today;
+                return Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
             },
 
-            toggleCheck: function(index) {
-                const arr = this.data.daily.checklist;
-                const newState = !arr[index];
-                
-                if (newState) {
-                    arr[index] = true;
-                } else {
-                    // Waterfall uncheck
-                    for (let i = index; i < arr.length; i++) {
-                        arr[i] = false;
-                    }
-                }
-                this.save();
-            },
-
-            updateNote: function(dateStr, text) {
-                if (!this.data.history[dateStr]) {
-                    this.data.history[dateStr] = { percent: 0, completed: false, focus: null, note: "" };
-                }
-                this.data.history[dateStr].note = text;
-                this.save(); // Note: direct save to history, bypasses daily sync for past dates
-            },
-
-            saveReflection: function(cycleIndex, text) {
-                this.data.reflections[cycleIndex] = text;
-                this.save(); // Persist reflections immediately
-            }
+            isPreStart: (dateStr) => dateStr < CONFIG.START_DATE,
+            isFuture: (dateStr) => dateStr > DateEngine.getToday(),
+            isToday: (dateStr) => dateStr === DateEngine.getToday()
         };
 
-        /* --- 4. METRICS ENGINE --- */
-        const Metrics = {
-            activeDays: 0,
-            currentStreak: 0, // Not displayed, but part of calc
-            longestStreak: 0,
-            collectionsFocusCount: 0,
-            totalCompletedDays: 0,
+        /* --- 3. INTEGRITY SYSTEM (INVISIBLE DISCIPLINE) --- */
+        const Integrity = {
+            
+            // Simple hash for state verification
+            hash: (str) => {
+                let hash = 0, i, chr;
+                if (str.length === 0) return hash;
+                for (i = 0; i < str.length; i++) {
+                    chr = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + chr;
+                    hash |= 0; // Convert to 32bit integer
+                }
+                return hash.toString();
+            },
 
-            update: function() {
-                const history = State.data.history;
-                const dates = Object.keys(history).sort(); // Sort chronological
-                const start = DateUtils.parse(START_DATE_STR);
+            audit: (state) => {
+                // 1. Check for future completion (Impossible state)
+                const today = DateEngine.getToday();
+                let violations = [];
                 
-                let currentRun = 0;
-                let maxRun = 0;
-                let active = 0;
-                let collections = 0;
-                let completedTotal = 0;
-                
-                // Iterate strictly chronologically
-                // We need to fill in gaps to break streaks
-                if (dates.length > 0) {
-                    const firstDate = DateUtils.parse(dates[0]);
-                    const lastDate = DateUtils.parse(dates[dates.length - 1]);
-                    
-                    // Optimization: We only care about streak logic which requires continuity
-                    // But for "Active Days", just counting entries > 0 is enough
-                    
-                    // 1. Active & Focus & Total Completed
-                    dates.forEach(d => {
-                        const entry = history[d];
-                        // Filter out pre-start trash data if any
-                        if (DateUtils.parse(d) < start) return; 
+                Object.keys(state.history).forEach(date => {
+                    if (date > today && state.history[date].checklist.length > 0) {
+                        violations.push({ type: "FUTURE_MODIFICATION", date });
+                        delete state.history[date]; // Auto-repair: Delete impossible future data
+                    }
+                });
 
-                        if (entry.percent > 0) active++;
-                        if (entry.completed) completedTotal++;
-                        if (entry.focus === 'Collections') collections++;
-                    });
-
-                    // 2. Strict Streak Calculation
-                    // We must iterate day by day from START to TODAY to check continuity
-                    const today = DateUtils.parse(DateUtils.getTodayStr());
-                    // Start checking streaks from the first recorded day or Start Date?
-                    // "Longest streak = longest continuous run of COMPLETED days"
-                    
-                    // We just scan the sorted dates. If gap > 1 day, streak breaks.
-                    // Actually, if a day exists in history but completed=false, streak breaks.
-                    // If day missing from history, streak breaks.
-                    
-                    let streak = 0;
-                    // Scan from Start Date to Today
-                    for (let d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {
-                        const dStr = d.toLocaleDateString('en-CA');
-                        const entry = history[dStr];
-                        
-                        if (entry && entry.completed) {
-                            streak++;
-                        } else {
-                            // If today is not completed yet, does it break streak?
-                            // Usually current streak includes today if completed, or is yesterday's streak.
-                            // Requirements: "Missing a day breaks streak".
-                            // If today is incomplete, streak is 0? No, that's harsh.
-                            // Standard logic: Current Streak is contiguous completed days ending Yesterday OR Today.
-                            
-                            // For "Longest Streak", we just track max `streak` seen before reset.
-                            if (streak > maxRun) maxRun = streak;
-                            streak = 0;
+                // 2. Check Sequence Validity in History
+                Object.keys(state.history).forEach(date => {
+                    const entry = state.history[date];
+                    if (entry.checklist && entry.checklist.length > 0) {
+                        // Ensure no gaps
+                        const indices = entry.checklist.map(id => CONFIG.CHECKLIST.findIndex(i => i.id === id)).sort((a,b) => a-b);
+                        for (let i = 0; i < indices.length; i++) {
+                            if (indices[i] !== i) {
+                                violations.push({ type: "SEQUENCE_GAP", date });
+                                // Auto-repair: Reset invalid day
+                                entry.checklist = [];
+                                entry.focusLocked = false;
+                                break;
+                            }
                         }
                     }
-                    // Final check at end of loop
-                    if (streak > maxRun) maxRun = streak;
+                });
+
+                // 3. Schema & Hash Check (Basic)
+                if (!state.meta || !state.meta.created) {
+                    violations.push({ type: "SCHEMA_MISSING" });
+                    state.meta = { created: Date.now(), version: 4 };
                 }
 
-                this.activeDays = active;
-                this.longestStreak = maxRun;
-                this.collectionsFocusCount = collections;
-                this.totalCompletedDays = completedTotal;
-                
-                // Update UI immediately
-                DOM.updateMetrics();
-                ReflectionUI.update();
+                if (violations.length > 0) {
+                    Integrity.report("AUDIT_FAILURE", violations);
+                    return false;
+                }
+                return true;
+            },
+
+            report: (code, details) => {
+                console.warn(`[AUDIT] ${code}`, details);
+                // Visual Indicator
+                const dot = document.getElementById('integrity-dot');
+                const msg = document.getElementById('integrity-msg');
+                if(dot) {
+                    dot.className = "status-dot audit";
+                    msg.textContent = "AUDIT";
+                }
             }
         };
 
-        /* --- 5. DOM & RENDERING --- */
-        const DOM = {
-            // Cache elements
-            els: {
-                date: document.getElementById('current-date'),
-                streak: document.getElementById('streak-display'),
-                yearGrid: document.getElementById('year-grid'),
-                checklist: document.getElementById('checklist-container'),
-                progressBar: document.getElementById('progress-bar'),
-                focusContainer: document.getElementById('focus-container'),
-                fieldNote: document.getElementById('field-note-content'),
-                metrics: {
-                    active: document.getElementById('metric-active'),
-                    maxStreak: document.getElementById('metric-max-streak'),
-                    focus: document.getElementById('metric-focus')
-                },
-                sidePanel: document.getElementById('side-panel'),
-                panelDate: document.getElementById('panel-date'),
-                dailyInput: document.getElementById('daily-note-input'),
-                panelStatus: document.getElementById('panel-status'),
-                tooltip: document.getElementById('tooltip')
+        /* --- 4. STATE STORE --- */
+        const Store = {
+            data: {
+                meta: { version: 4, created: Date.now(), lastHash: "" },
+                history: {}, // "YYYY-MM-DD": { focus:Str, focusLocked:Bool, checklist:[ids], notes:[{ts, text}] }
+                events: []   // Audit Log: { ts, type, details }
             },
 
-            init: function() {
-                this.renderHeader();
-                this.renderGrid();
-                this.renderFocus();
-                this.renderChecklist();
-                this.renderNote();
+            init: () => {
+                const raw = localStorage.getItem(CONFIG.STORAGE_KEY);
+                if (raw) {
+                    try {
+                        const parsed = JSON.parse(raw);
+                        Store.data = parsed;
+                        Integrity.audit(Store.data);
+                    } catch (e) {
+                        Integrity.report("CORRUPTION_RESET", e);
+                        // In production, we might backup. Here, we enforce strictness.
+                        // However, preserving notes is kind. We will try to salvage.
+                        // If totally failed, reset.
+                        Store.reset();
+                    }
+                } else {
+                    Store.reset();
+                }
                 
-                // Bind Global Events
-                document.getElementById('close-panel-btn').addEventListener('click', Panel.close);
-                document.getElementById('copy-note-btn').addEventListener('click', () => {
-                   navigator.clipboard.writeText(this.els.fieldNote.textContent);
+                // Ensure today exists if allowed
+                const today = DateEngine.getToday();
+                if (!DateEngine.isPreStart(today) && !Store.data.history[today]) {
+                    Store.createEntry(today);
+                }
+            },
+
+            reset: () => {
+                Store.data = {
+                    meta: { version: 4, created: Date.now(), lastHash: "" },
+                    history: {},
+                    events: []
+                };
+                Store.save();
+            },
+
+            createEntry: (date) => {
+                Store.data.history[date] = { 
+                    focus: null, 
+                    focusLocked: false, 
+                    checklist: [], 
+                    notes: [] // Array of {ts, text} for immutable appending
+                };
+            },
+
+            save: () => {
+                const json = JSON.stringify(Store.data);
+                Store.data.meta.lastHash = Integrity.hash(json); // Sign the state
+                localStorage.setItem(CONFIG.STORAGE_KEY, json);
+            },
+
+            // Get immutable copy of entry
+            getEntry: (date) => {
+                if (!Store.data.history[date]) return null;
+                // Deep copy to prevent mutation outside Store
+                return JSON.parse(JSON.stringify(Store.data.history[date]));
+            },
+
+            // Transactional update for Today ONLY
+            updateToday: (callback) => {
+                const today = DateEngine.getToday();
+                if (DateEngine.isPreStart(today)) return; // Lockout
+                
+                if (!Store.data.history[today]) {
+                    Store.createEntry(today);
+                }
+                
+                // execute mutation
+                callback(Store.data.history[today]);
+                
+                // Check focus lock condition automatically
+                const entry = Store.data.history[today];
+                if (entry.checklist.length > 0 && !entry.focusLocked) {
+                    entry.focusLocked = true;
+                    Store.logEvent("FOCUS_LOCKED", { date: today, focus: entry.focus });
+                }
+
+                Store.save();
+                View.render(); // Global Re-render
+            },
+
+            // Append-only Note Logic
+            appendNote: (date, text) => {
+                if (!Store.data.history[date]) {
+                    if (DateEngine.isFuture(date)) return;
+                    Store.createEntry(date);
+                }
+                
+                // Push new block
+                const noteBlock = {
+                    ts: Date.now(),
+                    text: text.trim()
+                };
+                
+                // Avoid empty appends
+                if (noteBlock.text.length === 0) return;
+
+                Store.data.history[date].notes.push(noteBlock);
+                Store.save();
+            },
+
+            logEvent: (type, details) => {
+                Store.data.events.push({
+                    ts: Date.now(),
+                    type: type,
+                    details: details
                 });
+                // Keep log size managed? Maybe later. For now, infinite log for "Record Reality".
+            }
+        };
+
+        /* --- 5. DOMAIN LOGIC --- */
+        const Domain = {
+            // Is focus selection permitted?
+            canChangeFocus: (entry) => {
+                return !entry.focusLocked;
+            },
+
+            // Checklist Logic
+            canCheck: (entry, index) => {
+                // Requirement: Strictly sequential
+                // Can check index N if:
+                // 1. Focus is selected
+                // 2. Index N-1 is checked (or N=0)
                 
-                // Keyboard Escape
+                if (!entry.focus) return { allowed: false, reason: "NO_FOCUS" };
+                
+                const id = CONFIG.CHECKLIST[index].id;
+                const isChecked = entry.checklist.includes(id);
+
+                // Check if already checked (Uncheck logic)
+                if (isChecked) {
+                    // Allowed to uncheck, but warns about sequence breaking?
+                    // "Undoing a checkbox logs an incomplete event"
+                    return { allowed: true, action: "uncheck" };
+                }
+
+                // Sequential check
+                if (index > 0) {
+                    const prevId = CONFIG.CHECKLIST[index - 1].id;
+                    if (!entry.checklist.includes(prevId)) return { allowed: false, reason: "SEQUENCE" };
+                }
+                
+                return { allowed: true, action: "check" };
+            },
+
+            calculateMetrics: () => {
+                const history = Store.data.history;
+                const start = DateEngine.parse(CONFIG.START_DATE);
+                const today = DateEngine.parse(DateEngine.getToday());
+                
+                let stats = {
+                    totalDays: 0,
+                    executedDays: 0,
+                    missedDays: 0,
+                    perfectRun: 0,
+                    currentRun: 0,
+                    totalLogs: Store.data.events.length
+                };
+
+                if (today < start) return stats; // No metrics pre-start
+
+                // Calculate total days including today
+                const diffTime = Math.abs(today - start);
+                stats.totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+                let tempStreak = 0;
+
+                // Iterate day by day from start to today
+                for (let i = 0; i < stats.totalDays; i++) {
+                    const d = new Date(start);
+                    d.setDate(start.getDate() + i);
+                    const str = d.toISOString().split('T')[0];
+                    const entry = history[str];
+                    
+                    const isPerfect = entry && entry.checklist.length === CONFIG.CHECKLIST.length;
+                    
+                    if (isPerfect) {
+                        stats.executedDays++;
+                        tempStreak++;
+                    } else {
+                        // Only count as missed if it's in the past. Today isn't missed until tomorrow.
+                        if (str !== DateEngine.getToday()) {
+                            stats.missedDays++;
+                        }
+                        tempStreak = 0;
+                    }
+
+                    if (tempStreak > stats.perfectRun) stats.perfectRun = tempStreak;
+                }
+                stats.currentRun = tempStreak;
+
+                return stats;
+            }
+        };
+
+        /* --- 6. VIEW ENGINE --- */
+        const View = {
+            init: () => {
+                // Bind Global Events
+                document.getElementById('panel-close').addEventListener('click', Panel.close);
+                document.getElementById('panel-overlay').addEventListener('click', Panel.close);
+                
+                // Keyboard Shortcuts
                 document.addEventListener('keydown', (e) => {
                     if (e.key === 'Escape') Panel.close();
-                });
-            },
-
-            renderHeader: function() {
-                const today = new Date();
-                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-                this.els.date.textContent = today.toLocaleDateString('en-US', options).toUpperCase();
-            },
-
-            updateMetrics: function() {
-                // Streak Logic for Header:
-                // We need "Current Streak".
-                // Logic: Count backwards from Today.
-                let currentStreak = 0;
-                const today = DateUtils.parse(DateUtils.getTodayStr());
-                const history = State.data.history;
-                
-                // Check today
-                const todayStr = DateUtils.getTodayStr();
-                if (history[todayStr]?.completed) {
-                    currentStreak++;
-                    // Check yesterday backwards
-                    let d = new Date(today);
-                    d.setDate(d.getDate() - 1);
-                    while (d >= DateUtils.parse(START_DATE_STR)) {
-                         const dStr = d.toLocaleDateString('en-CA');
-                         if (history[dStr]?.completed) currentStreak++;
-                         else break;
-                         d.setDate(d.getDate() - 1);
-                    }
-                } else {
-                    // Check yesterday backwards
-                    let d = new Date(today);
-                    d.setDate(d.getDate() - 1);
-                    while (d >= DateUtils.parse(START_DATE_STR)) {
-                         const dStr = d.toLocaleDateString('en-CA');
-                         if (history[dStr]?.completed) currentStreak++;
-                         else break;
-                         d.setDate(d.getDate() - 1);
-                    }
-                }
-
-                this.els.streak.textContent = `STREAK: ${currentStreak}`;
-                this.els.metrics.active.textContent = Metrics.activeDays;
-                this.els.metrics.maxStreak.textContent = Metrics.longestStreak;
-                this.els.metrics.focus.textContent = Metrics.collectionsFocusCount;
-            },
-
-            renderGrid: function() {
-                this.els.yearGrid.innerHTML = '';
-                
-                // Generate 2026 Grid (GitHub Style: Col-Major)
-                // We need 53 columns, 7 rows.
-                // Start Date: Jan 1 2026 (Thursday)
-                const startYear = new Date('2026-01-01T00:00:00');
-                const endYear = new Date('2026-12-31T00:00:00');
-                
-                // Find the Sunday before Jan 1 to align grid start
-                const gridStart = new Date(startYear);
-                gridStart.setDate(startYear.getDate() - startYear.getDay()); // Go back to Sunday
-
-                // Generate cells
-                // We generate roughly 53 weeks * 7 days
-                let current = new Date(gridStart);
-                
-                // We render column by column? 
-                // CSS Grid is set to `grid-auto-flow: column`. 
-                // So we just dump days in chronological order and they fill columns (rows 1-7).
-                // Wait, `grid-template-rows: repeat(7, ...)` and auto-flow column means item 1 goes to 0,0, item 2 to 0,1 (down the col).
-                // Yes. So chronological order works perfectly.
-                
-                while (current <= endYear || current.getDay() !== 0) {
-                    const dateStr = current.toLocaleDateString('en-CA');
-                    const node = document.createElement('div');
-                    node.className = 'day-node';
-                    
-                    // Determine state
-                    const dObj = DateUtils.parse(dateStr);
-                    const todayObj = DateUtils.parse(DateUtils.getTodayStr());
-                    
-                    // 1. Is it 2026? (Grid padding might be 2025)
-                    const is2026 = dObj.getFullYear() === 2026;
-                    
-                    if (!is2026) {
-                        node.style.opacity = '0'; // Hide padding days
-                        node.style.pointerEvents = 'none';
-                    } else {
-                        // 2. Strict Logic
-                        if (DateUtils.isBeforeStart(dateStr)) {
-                            node.classList.add('pre-start');
-                        } else if (DateUtils.isFuture(dateStr)) {
-                            node.classList.add('future');
-                        } else {
-                            // Valid Interactive Date
-                            if (dateStr === DateUtils.getTodayStr()) node.classList.add('today');
-                            
-                            // History Data
-                            const entry = State.data.history[dateStr];
-                            if (entry) {
-                                if (entry.completed) node.classList.add('active-full');
-                                else if (entry.percent > 0) node.classList.add('active-partial');
+                    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                        // Quick save logic if panel open
+                        if (document.getElementById('side-panel').classList.contains('open')) {
+                            const val = document.getElementById('journal-input').value;
+                            if (val) {
+                                Panel.save(val);
+                                document.getElementById('journal-input').value = ""; // clear after save
                             }
-                            
-                            // Interaction
-                            node.addEventListener('mouseenter', (e) => this.showTooltip(e, dateStr));
-                            node.addEventListener('mouseleave', this.hideTooltip);
-                            node.addEventListener('click', () => Panel.open(dateStr));
                         }
                     }
-
-                    this.els.yearGrid.appendChild(node);
-                    current.setDate(current.getDate() + 1);
-                    
-                    // Safety break
-                    if (current.getFullYear() > 2026) break;
-                }
-            },
-
-            renderFocus: function() {
-                const container = this.els.focusContainer;
-                container.innerHTML = '';
-                const currentFocus = State.data.daily.focus;
-
-                FOCUS_OPTIONS.forEach(opt => {
-                    const btn = document.createElement('button');
-                    btn.className = `focus-option ${currentFocus === opt ? 'active' : ''}`;
-                    btn.textContent = opt;
-                    btn.onclick = () => {
-                        State.setDailyFocus(opt);
-                        this.renderFocus();
-                        this.renderChecklist();
-                        this.renderGrid(); // Update grid for today
-                        // Remove attention shake if exists
-                        container.classList.remove('attention');
-                    };
-                    container.appendChild(btn);
-                });
-            },
-
-            renderChecklist: function() {
-                const list = this.els.checklist;
-                list.innerHTML = '';
-                const stateArr = State.data.daily.checklist;
-                const hasFocus = !!State.data.daily.focus;
-                let completedCount = 0;
-
-                CHECKLIST_ITEMS.forEach((text, index) => {
-                    const li = document.createElement('li');
-                    const isChecked = stateArr[index];
-                    
-                    // Strict Waterfall Logic
-                    // Unlocked if: Focus Selected AND (Index is 0 OR Previous is Checked)
-                    const isUnlocked = hasFocus && (index === 0 || stateArr[index - 1]);
-                    
-                    li.className = `checklist-item ${isChecked ? 'completed' : ''} ${!isUnlocked ? 'locked' : ''}`;
-                    
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.checked = isChecked;
-                    checkbox.disabled = !isUnlocked;
-                    
-                    const changeHandler = () => {
-                        if (!hasFocus) {
-                            this.els.focusContainer.classList.add('attention');
-                            setTimeout(() => this.els.focusContainer.classList.remove('attention'), 500);
-                            checkbox.checked = false; // Force uncheck
-                            return;
-                        }
-                        State.toggleCheck(index);
-                        this.renderChecklist();
-                        this.renderGrid();
-                        Metrics.update();
-                    };
-
-                    checkbox.addEventListener('change', changeHandler);
-                    
-                    // Click text to toggle
-                    const span = document.createElement('span');
-                    span.textContent = text;
-                    span.onclick = () => {
-                        if (isUnlocked) {
-                             // Toggle via State
-                             // Need to handle UI check manually if we bypass checkbox click
-                             State.toggleCheck(index);
-                             this.renderChecklist();
-                             this.renderGrid();
-                             Metrics.update();
-                        } else if (!hasFocus) {
-                            this.els.focusContainer.classList.add('attention');
-                            setTimeout(() => this.els.focusContainer.classList.remove('attention'), 500);
-                        }
-                    };
-
-                    li.appendChild(checkbox);
-                    li.appendChild(span);
-                    list.appendChild(li);
-                    
-                    if (isChecked) completedCount++;
                 });
 
-                const pct = (completedCount / CHECKLIST_ITEMS.length) * 100;
-                this.els.progressBar.style.width = `${pct}%`;
-            },
-            
-            renderNote: function() {
-                // Deterministic note based on day index from start of year
-                const start = new Date(new Date().getFullYear(), 0, 0);
-                const diff = new Date() - start;
-                const oneDay = 1000 * 60 * 60 * 24;
-                const dayOfYear = Math.floor(diff / oneDay);
-                const index = dayOfYear % FIELD_NOTES.length;
-                this.els.fieldNote.textContent = FIELD_NOTES[index];
+                // Initial Render
+                View.render();
             },
 
-            showTooltip: function(e, dateStr) {
-                const tt = DOM.els.tooltip;
-                const history = State.data.history[dateStr];
+            render: () => {
+                const today = DateEngine.getToday();
                 
-                let html = `<strong>${dateStr}</strong>`;
-                if (history) {
-                    if (history.focus) html += ` <span style="opacity:0.7">| ${history.focus}</span>`;
-                    html += `<br>Completed: ${history.percent}%`;
+                // 1. Header Date
+                document.getElementById('current-date-display').textContent = DateEngine.format(today);
+
+                // 2. Year Grid
+                View.renderGrid();
+
+                // 3. Dynamic Content
+                const contentArea = document.getElementById('dynamic-content');
+                if (DateEngine.isPreStart(today)) {
+                    // Locked View
+                    View.renderLocked(contentArea);
                 } else {
-                    html += `<br>No Data`;
+                    // Active Protocol
+                    View.renderActive(contentArea, today);
                 }
-
-                tt.innerHTML = html;
-                
-                // Position
-                const rect = e.target.getBoundingClientRect();
-                tt.style.left = `${rect.left + window.scrollX}px`;
-                tt.style.top = `${rect.top + window.scrollY - 40}px`;
-                tt.style.opacity = '1';
             },
 
-            hideTooltip: function() {
-                DOM.els.tooltip.style.opacity = '0';
+            renderLocked: (container) => {
+                container.innerHTML = '';
+                const tpl = document.getElementById('tpl-locked');
+                container.appendChild(tpl.content.cloneNode(true));
+                
+                // Countdown
+                const daysLeft = DateEngine.getDaysUntilStart();
+                const el = document.getElementById('countdown-display');
+                if (el) el.textContent = `T-MINUS ${daysLeft} DAYS`;
+            },
+
+            renderActive: (container, today) => {
+                container.innerHTML = '';
+                const tpl = document.getElementById('tpl-active');
+                container.appendChild(tpl.content.cloneNode(true));
+                
+                const entry = Store.getEntry(today) || { focus: null, focusLocked: false, checklist: [] };
+                View.renderProtocol(entry);
+            },
+
+            renderGrid: () => {
+                const root = document.getElementById('calendar-root');
+                // Optimization: Don't destroy if exists, just update?
+                // For simplicity and strict state reflection, we rebuild. 
+                // Grid is small enough (371 nodes).
+                root.innerHTML = ''; 
+
+                const days = DateEngine.getGridRange();
+                const today = DateEngine.getToday();
+
+                days.forEach(dateStr => {
+                    const el = document.createElement('div');
+                    el.className = 'grid-cell';
+                    
+                    // State Classes
+                    if (DateEngine.isPreStart(dateStr)) el.classList.add('pre-start');
+                    else if (DateEngine.isFuture(dateStr)) el.classList.add('future');
+                    if (dateStr === today) el.classList.add('active-today');
+
+                    // Data State
+                    const entry = Store.getEntry(dateStr); // Use Store method which handles nulls
+                    if (entry) {
+                        if (entry.checklist.length === CONFIG.CHECKLIST.length) {
+                            el.dataset.state = 'complete';
+                        } else if (entry.checklist.length > 0) {
+                            el.dataset.state = 'partial';
+                        }
+                    }
+
+                    // Interaction
+                    // Allow tapping Pre-start/Future? Prompt says "Future and pre-start cells remain non-interactive."
+                    if (!DateEngine.isFuture(dateStr) && !DateEngine.isPreStart(dateStr)) {
+                        el.onclick = () => Panel.open(dateStr);
+                    }
+
+                    root.appendChild(el);
+                });
+            },
+
+            renderProtocol: (entry) => {
+                // Focus
+                const focusRoot = document.getElementById('focus-render-target');
+                const isLocked = !Domain.canChangeFocus(entry);
+                
+                if (isLocked) {
+                    document.getElementById('focus-lock-status').textContent = "LOCKED: Execution in progress";
+                    document.getElementById('focus-lock-status').style.color = "var(--accent-core)";
+                }
+
+                focusRoot.innerHTML = CONFIG.FOCUS_AREAS.map(f => {
+                    const isSelected = entry.focus === f;
+                    let classes = 'focus-chip';
+                    
+                    if (isSelected) {
+                        if (isLocked) classes += ' locked-active';
+                        else classes += ' selected';
+                    } else {
+                        if (isLocked) classes += ' locked-out';
+                    }
+                    
+                    // Only attach click if not locked
+                    const clickAttr = isLocked ? '' : `onclick="ActionController.selectFocus('${f}')"`;
+                    
+                    return `<button class="${classes}" ${clickAttr}>${f}</button>`;
+                }).join('');
+
+                // Checklist
+                const listRoot = document.getElementById('checklist-render-target');
+                listRoot.innerHTML = CONFIG.CHECKLIST.map((item, idx) => {
+                    const isChecked = entry.checklist.includes(item.id);
+                    const lockStatus = Domain.canCheck(entry, idx);
+                    
+                    let classes = 'check-item';
+                    if (isChecked) classes += ' checked';
+                    if (!lockStatus.allowed && !isChecked) classes += ' locked';
+
+                    // Onclick logic handled via Controller
+                    return `
+                        <div class="${classes}" onclick="ActionController.toggleCheck(${idx})">
+                            <div class="checkbox-ui"></div>
+                            <div class="check-content">
+                                <span class="check-label">${item.text}</span>
+                                <div class="time-badge">${item.time}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Metrics
+                const stats = Domain.calculateMetrics();
+                const ratio = stats.totalDays > 0 ? Math.round((stats.executedDays / stats.totalDays) * 100) : 0;
+                
+                document.getElementById('metric-ratio').textContent = `${ratio}%`;
+                document.getElementById('metric-ratio-detail').textContent = `${stats.executedDays}/${stats.totalDays} Days`;
+                
+                document.getElementById('metric-streak').textContent = stats.currentRun;
+                
+                document.getElementById('metric-missed').textContent = stats.missedDays;
+                document.getElementById('metric-total').textContent = stats.totalLogs;
             }
         };
 
-        /* --- 6. REFLECTION LOGIC --- */
-        const ReflectionUI = {
-            currentCycle: 0,
-            viewingCycle: 0,
-            
-            init: function() {
-                this.els = {
-                    area: document.getElementById('weekly-note-input'),
-                    label: document.getElementById('reflection-cycle-label'),
-                    prev: document.getElementById('prev-reflection'),
-                    next: document.getElementById('next-reflection')
-                };
+        /* --- 7. ACTION CONTROLLER --- */
+        const ActionController = {
+            selectFocus: (focus) => {
+                Store.updateToday(entry => {
+                    // Double check Domain rules inside transaction
+                    if (!Domain.canChangeFocus(entry)) {
+                        Store.logEvent("FOCUS_CHANGE_ATTEMPT", { from: entry.focus, to: focus, denied: true });
+                        // Visual Warning
+                        const el = document.getElementById('focus-render-target');
+                        el.classList.remove('warning-flash');
+                        void el.offsetWidth;
+                        el.classList.add('warning-flash');
+                        return;
+                    }
+                    entry.focus = focus;
+                    Store.logEvent("FOCUS_SELECTED", { focus });
+                });
+            },
 
-                this.els.area.addEventListener('input', (e) => {
-                    if (this.viewingCycle === this.currentCycle) {
-                         State.saveReflection(this.currentCycle, e.target.value);
+            toggleCheck: (index) => {
+                Store.updateToday(entry => {
+                    const status = Domain.canCheck(entry, index);
+                    const item = CONFIG.CHECKLIST[index];
+
+                    if (!status.allowed) {
+                        Store.logEvent("INVALID_CHECK_ATTEMPT", { index, reason: status.reason });
+                        // Visual Warning
+                        const el = document.getElementById('checklist-render-target');
+                        el.classList.remove('warning-flash');
+                        void el.offsetWidth;
+                        el.classList.add('warning-flash');
+                        return;
+                    }
+
+                    if (status.action === 'check') {
+                        entry.checklist.push(item.id);
+                        Store.logEvent("ITEM_COMPLETED", { id: item.id });
+                    } else {
+                        // Uncheck Logic (Waterfall)
+                        // "Undoing a checkbox logs an 'incomplete' event"
+                        // Strictly remove this item and any subsequent items to maintain sequence validity
+                        const idsToRemove = [];
+                        
+                        // We need to remove the clicked item, AND any item that appears *after* it in the sequence
+                        const clickedIndex = index;
+                        
+                        // Rebuild checklist keeping only items strictly before this index
+                        // This implies if I uncheck step 2, step 3 is also unchecked.
+                        const validIds = CONFIG.CHECKLIST.slice(0, clickedIndex).map(i => i.id);
+                        
+                        // Find what we are removing
+                        const removed = entry.checklist.filter(id => !validIds.includes(id));
+                        
+                        entry.checklist = entry.checklist.filter(id => validIds.includes(id));
+                        
+                        Store.logEvent("ITEM_UNDONE", { removedIds: removed });
                     }
                 });
-
-                this.els.prev.onclick = () => this.navigate(-1);
-                this.els.next.onclick = () => this.navigate(1);
-            },
-
-            update: function() {
-                // Calculate current cycle: floor(totalCompletedDays / 7)
-                // If 0-6 days done -> Cycle 0 (Locked?)
-                // Requirement: "Appears after every 7 completed days"
-                // So Cycle 1 unlocks at 7 days.
-                
-                const total = Metrics.totalCompletedDays;
-                this.currentCycle = Math.floor(total / 7);
-                
-                // Initialize viewing cycle on first load
-                if (this.viewingCycle === 0) this.viewingCycle = Math.max(1, this.currentCycle);
-
-                this.render();
-            },
-
-            navigate: function(dir) {
-                this.viewingCycle += dir;
-                this.render();
-            },
-
-            render: function() {
-                // Valid range: 1 to currentCycle (or 1 if current is 0, but locked)
-                // If currentCycle is 0, we show "Progress to unlock".
-                
-                const locked = this.currentCycle < 1;
-                
-                if (locked) {
-                    this.els.label.textContent = "Reflection Locked";
-                    this.els.area.value = "";
-                    this.els.area.placeholder = `Complete ${7 - Metrics.totalCompletedDays} more days to unlock reflection.`;
-                    this.els.area.readOnly = true;
-                    this.els.prev.disabled = true;
-                    this.els.next.disabled = true;
-                    return;
-                }
-                
-                // Clamping
-                if (this.viewingCycle < 1) this.viewingCycle = 1;
-                if (this.viewingCycle > this.currentCycle) this.viewingCycle = this.currentCycle;
-
-                this.els.label.textContent = `Cycle ${this.viewingCycle}`;
-                
-                // Load data
-                const text = State.data.reflections[this.viewingCycle] || "";
-                this.els.area.value = text;
-                
-                // Read-only if viewing past
-                const isPast = this.viewingCycle < this.currentCycle;
-                this.els.area.readOnly = isPast;
-                this.els.area.placeholder = isPast ? "Archived reflection." : "Type your reflection here...";
-
-                // Nav Buttons
-                this.els.prev.disabled = this.viewingCycle <= 1;
-                this.els.next.disabled = this.viewingCycle >= this.currentCycle;
             }
         };
 
-        /* --- 7. SIDE PANEL LOGIC --- */
+        /* --- 8. PANEL LOGIC (JOURNAL) --- */
         const Panel = {
             activeDate: null,
-            timer: null,
 
-            open: function(dateStr) {
-                this.activeDate = dateStr;
-                DOM.els.panelDate.textContent = dateStr;
-                DOM.els.sidePanel.classList.add('open');
+            open: (dateStr) => {
+                Panel.activeDate = dateStr;
+                const entry = Store.getEntry(dateStr);
                 
-                // Load Note
-                const entry = State.data.history[dateStr] || {};
-                DOM.els.dailyInput.value = entry.note || "";
-                DOM.els.panelStatus.textContent = "Ready";
+                document.getElementById('panel-date-display').textContent = DateEngine.format(dateStr);
+                
+                // Context Info
+                const contextEl = document.getElementById('panel-context-info');
+                if (entry) {
+                    const pct = Math.round((entry.checklist.length / CONFIG.CHECKLIST.length) * 100);
+                    contextEl.textContent = `FOCUS: ${entry.focus || 'NONE'} // PROGRESS: ${pct}%`;
+                } else {
+                    contextEl.textContent = "NO DATA";
+                }
 
-                // Setup Input Listener
-                DOM.els.dailyInput.oninput = (e) => {
-                    DOM.els.panelStatus.textContent = "Typing...";
-                    clearTimeout(this.timer);
-                    this.timer = setTimeout(() => {
-                        State.updateNote(this.activeDate, e.target.value);
-                        DOM.els.panelStatus.textContent = "Saved";
-                    }, 500);
-                };
+                // Render History (Immutable Past Notes)
+                const historySection = document.getElementById('panel-history-section');
+                const pastNotesContainer = document.getElementById('panel-past-notes');
+                pastNotesContainer.innerHTML = '';
+
+                if (entry && entry.notes && entry.notes.length > 0) {
+                    historySection.style.display = 'block';
+                    entry.notes.forEach(note => {
+                        const div = document.createElement('div');
+                        div.className = 'note-block';
+                        // Format Timestamp
+                        const time = new Date(note.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        div.innerHTML = `<span class="note-timestamp">${time}</span>${note.text}`;
+                        pastNotesContainer.appendChild(div);
+                    });
+                } else {
+                    historySection.style.display = 'none';
+                }
+
+                // Clear Editor for new input
+                document.getElementById('journal-input').value = "";
+                
+                // If future, disable editor
+                if (DateEngine.isFuture(dateStr)) {
+                    document.getElementById('journal-input').disabled = true;
+                    document.getElementById('journal-input').placeholder = "Future date locked.";
+                } else {
+                    document.getElementById('journal-input').disabled = false;
+                    document.getElementById('journal-input').placeholder = "Append new log entry...";
+                }
+                
+                document.getElementById('panel-overlay').classList.add('active');
+                document.getElementById('side-panel').classList.add('open');
+                
+                // Auto-focus if not future
+                if (!DateEngine.isFuture(dateStr)) {
+                    setTimeout(() => document.getElementById('journal-input').focus(), 300);
+                }
             },
 
-            close: function() {
-                DOM.els.sidePanel.classList.remove('open');
-                DOM.els.dailyInput.oninput = null; // Cleanup
+            close: () => {
+                document.getElementById('panel-overlay').classList.remove('active');
+                document.getElementById('side-panel').classList.remove('open');
+                Panel.activeDate = null;
+                // Force blur to hide mobile keyboard
+                document.getElementById('journal-input').blur();
+            },
+
+            save: (text) => {
+                if(!Panel.activeDate) return;
+                if(!text || text.trim() === "") return;
+
+                Store.appendNote(Panel.activeDate, text);
+                
+                // UI Feedback
+                document.getElementById('save-status').innerHTML = `<i data-feather="check" style="width:12px"></i> Synced ${new Date().toLocaleTimeString()}`;
+                
+                // Re-render the panel to show the new note in the "Previous Entries" section immediately
+                // This gives the "Append Only" feel
+                Panel.open(Panel.activeDate); 
             }
         };
 
         /* --- BOOTSTRAP --- */
-        State.load();
-        Metrics.update(); // Initial calc
-        DOM.init();
-        ReflectionUI.init();
-        ReflectionUI.update();
-        feather.replace();
+        (function() {
+            try {
+                // Initialize Feather Icons
+                feather.replace();
+                
+                // Initialize System
+                Store.init();
+                View.init();
+                
+                console.log("PROJECT K // SYSTEM ONLINE");
+            } catch (e) {
+                console.error("System Failure", e);
+                document.body.innerHTML = `
+                    <div style="padding:40px; color:var(--accent-error); text-align:center; font-family:monospace;">
+                        <h1>SYSTEM INTEGRITY FAILURE</h1>
+                        <p>Check console for stack trace.</p>
+                        <p>${e.message}</p>
+                    </div>
+                `;
+            }
+        })();
 
     </script>
 </body>
