@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project K: Java Mastery</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+
+    <style>
+        :root {
+            /* Palette */
+            --bg-color: #F9F9F9;
+            --surface-color: #FFFFFF;
+            --text-primary: #1A1A1A;
+            --text-secondary: #555555;
+            --text-muted: #A0A0A0;
+            --border-color: #E5E5E5;
+            --accent-color: #9A3B3B; /* Rust */
+            --accent-dim: rgba(154, 59, 59, 0.15);
+            --danger-color: #D32F2F;
+            
+            /* Typography */
+            --font-heading: 'Space Grotesk', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            
+            /* Spacing */
+            --spacing-sm: 12px;
+            --spacing-md: 24px;
+            --spacing-lg: 48px;
+            
+            /* Borders */
+            --border-width: 1px;
+            --radius: 0px; 
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: var(--spacing-md);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-lg);
+            margin-top: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        /* --- Typography --- */
+        h1, h2, h3 { font-family: var(--font-heading); font-weight: 500; letter-spacing: -0.02em; }
+        h1 { font-size: 2rem; color: var(--text-primary); }
+        h2 {
+            font-size: 0.85rem;
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 600;
+        }
+
+        .accent-text { color: var(--accent-color); }
+        .mono { font-family: var(--font-mono); }
+        
+        /* --- Layout --- */
+        .dashboard-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: var(--spacing-md); }
+        
+        .card {
+            background: var(--surface-color);
+            border: var(--border-width) solid var(--border-color);
+            padding: var(--spacing-md);
+            position: relative;
+        }
+
+        /* --- Header --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-bottom: var(--spacing-md);
+            border-bottom: var(--border-width) solid var(--border-color);
+        }
+
+        .meta-data {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: flex;
+            gap: var(--spacing-md);
+        }
+        
+        .streak-box { color: var(--accent-color); font-weight: 500; }
+
+        /* --- Section: Year Overview (Calendar) --- */
+        .year-grid-container { display: flex; flex-direction: column; gap: 12px; }
+        
+        .year-grid {
+            display: grid;
+            /* 53 columns (weeks), 7 rows (days) */
+            grid-template-rows: repeat(7, 10px);
+            grid-auto-flow: column; 
+            gap: 3px;
+            margin-top: 8px;
+            height: 90px; /* 7*10 + 6*3 approx */
+        }
+
+        .day-node {
+            width: 10px;
+            height: 10px;
+            background: var(--surface-color);
+            border: 1px solid #F0F0F0;
+            cursor: pointer;
+        }
+
+        /* Semantic States */
+        .day-node.pre-start { background: #F4F4F4; border-color: #F4F4F4; cursor: default; pointer-events: none; }
+        .day-node.future { background: #FFFFFF; border-color: #FAFAFA; cursor: default; pointer-events: none; }
+        .day-node.today { border: 1px solid var(--text-primary); z-index: 2; }
+        
+        /* Activity States */
+        .day-node.active-partial { background-color: var(--accent-dim); border-color: var(--accent-dim); }
+        .day-node.active-full { background-color: var(--accent-color); border-color: var(--accent-color); }
+
+        .metrics-row {
+            display: flex;
+            gap: 24px;
+            margin-top: 12px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+        }
+        
+        .metric-item { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary); }
+        .metric-value { color: var(--text-primary); font-weight: 600; }
+
+        /* Tooltip */
+        #tooltip {
+            position: absolute;
+            background: var(--text-primary);
+            color: var(--surface-color);
+            padding: 6px 10px;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.1s;
+            z-index: 100;
+            white-space: nowrap;
+        }
+
+        /* --- Section: No Zero Days --- */
+        .protocol-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md); }
+        
+        .focus-selector {
+            display: flex; gap: 8px; flex-wrap: wrap;
+            margin-bottom: var(--spacing-md); padding-bottom: var(--spacing-md);
+            border-bottom: 1px solid #F0F0F0;
+        }
+
+        .focus-option {
+            font-family: var(--font-mono); font-size: 0.75rem;
+            padding: 6px 12px;
+            border: 1px solid var(--border-color);
+            cursor: pointer; color: var(--text-secondary);
+            background: transparent;
+            transition: all 0.2s;
+        }
+        .focus-option:hover { border-color: var(--text-secondary); }
+        .focus-option.active { background-color: var(--text-primary); color: var(--surface-color); border-color: var(--text-primary); }
+        
+        /* Warning state if user tries to check without focus */
+        .focus-selector.attention { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; border-bottom-color: var(--accent-color); }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .progress-container { height: 2px; width: 100%; background: #F0F0F0; margin-bottom: var(--spacing-md); }
+        .progress-bar { height: 100%; background: var(--accent-color); width: 0%; transition: width 0.3s ease; }
+
+        .checklist { list-style: none; }
+        .checklist-item {
+            display: flex; align-items: center; padding: 12px 0;
+            border-bottom: 1px solid #F0F0F0; transition: all 0.2s ease;
+        }
+        .checklist-item:last-child { border-bottom: none; }
+        
+        .checklist-item.locked { opacity: 0.3; pointer-events: none; }
+        
+        .checklist-item input[type="checkbox"] {
+            appearance: none; width: 18px; height: 18px;
+            border: 1px solid var(--text-secondary); margin-right: 16px;
+            border-radius: 0; cursor: pointer; position: relative; flex-shrink: 0;
+        }
+        .checklist-item input[type="checkbox"]:checked { background-color: var(--accent-color); border-color: var(--accent-color); }
+        .checklist-item input[type="checkbox"]:checked::after {
+            content: ''; position: absolute; left: 5px; top: 1px; width: 4px; height: 10px;
+            border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg);
+        }
+        
+        .checklist-item.completed span { text-decoration: line-through; color: var(--text-muted); }
+
+        /* --- Section: Field Notes & Reflection --- */
+        .code-block {
+            background-color: #F8F8F8; padding: 20px;
+            font-family: var(--font-mono); font-size: 0.8rem;
+            color: var(--text-primary); border-left: 2px solid var(--accent-color);
+            margin-top: 8px; white-space: pre-wrap;
+        }
+
+        .weekly-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 8px; font-size: 0.75rem; color: var(--text-secondary); font-family: var(--font-mono);
+        }
+        .nav-btn { background: none; border: none; cursor: pointer; color: var(--text-primary); opacity: 0.5; }
+        .nav-btn:hover:not(:disabled) { opacity: 1; color: var(--accent-color); }
+        .nav-btn:disabled { cursor: default; opacity: 0.1; }
+
+        .reflection-area {
+            width: 100%; height: 120px; padding: 12px;
+            font-family: var(--font-mono); font-size: 0.85rem;
+            border: 1px solid var(--border-color); background: var(--bg-color);
+            color: var(--text-primary); resize: none; outline: none;
+        }
+        .reflection-area:focus { border-color: var(--accent-color); }
+        .reflection-area:read-only { background: #f0f0f0; color: var(--text-secondary); }
+
+        .copy-btn {
+            position: absolute; top: 10px; right: 10px;
+            background: transparent; border: none; cursor: pointer;
+            color: var(--text-secondary); opacity: 0.6;
+        }
+        .copy-btn:hover { opacity: 1; color: var(--accent-color); }
+
+        /* --- Side Panel --- */
+        .side-panel {
+            position: fixed; top: 0; right: -400px; width: 350px; height: 100vh;
+            background: var(--surface-color); border-left: 1px solid var(--border-color);
+            padding: 32px; box-shadow: -10px 0 20px rgba(0,0,0,0.02);
+            transition: right 0.3s ease; z-index: 500; display: flex; flex-direction: column;
+        }
+        .side-panel.open { right: 0; }
+        .panel-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color);
+        }
+        .daily-note-input {
+            width: 100%; height: 300px; padding: 12px;
+            font-family: var(--font-mono); border: 1px solid var(--border-color);
+            background: var(--bg-color); resize: none; outline: none; font-size: 0.9rem;
+        }
+        .daily-note-input:focus { border-color: var(--accent-color); }
+        .panel-status { margin-top: 12px; font-size: 0.75rem; color: var(--text-muted); text-align: right;}
+
+        /* --- Global Utils --- */
+        .hidden { display: none !important; }
+        .link-icon { width: 14px; height: 14px; color: var(--text-secondary); }
+        .dojo-grid { display: grid; gap: 16px; }
+        .dojo-block {
+            border: 1px solid var(--border-color); padding: 16px; text-decoration: none;
+            display: flex; align-items: center; justify-content: space-between;
+            transition: border-color 0.2s ease;
+        }
+        .dojo-block:hover { border-color: var(--accent-color); }
+        .dojo-info h4 { font-family: var(--font-heading); font-size: 1rem; color: var(--text-primary); margin-bottom: 4px; font-weight: 500; }
+        .dojo-info p { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary); }
+        .resource-list { display: flex; flex-direction: column; }
+        .resource-link {
+            display: flex; justify-content: space-between; align-items: center; text-decoration: none;
+            color: var(--text-primary); padding: 16px 0; border-bottom: 1px solid #F0F0F0;
+            transition: padding-left 0.2s ease;
+        }
+        .resource-link:last-child { border-bottom: none; }
+        .resource-link:hover { color: var(--accent-color); padding-left: 8px; }
+        .resource-link span { font-size: 0.95rem; }
+
+        @media (max-width: 768px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .side-panel { width: 100%; right: -100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>PROJECT K <span class="accent-text mono">//</span> JAVA MASTERY</h1>
+            <div class="meta-data">
+                <span id="current-date">...</span>
+                <span>|</span>
+                <span id="streak-display" class="streak-box">STREAK: 0</span>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+            
+            <!-- Left Column -->
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                
+                <!-- Section 0: Year Overview -->
+                <section class="card">
+                    <h2><i data-feather="calendar"></i> Year Overview 2026</h2>
+                    <div class="year-grid-container">
+                        <!-- Grid is 7 rows (Sun-Sat) x 53 cols -->
+                        <div class="year-grid" id="year-grid"></div>
+                        
+                        <div class="metrics-row">
+                            <div class="metric-item">ACTIVE DAYS: <span class="metric-value mono" id="metric-active">0</span></div>
+                            <div class="metric-item">LONGEST STREAK: <span class="metric-value mono" id="metric-max-streak">0</span></div>
+                            <div class="metric-item">COLLECTIONS FOCUS: <span class="metric-value mono" id="metric-focus">0</span></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 1: No Zero Days -->
+                <section class="card" id="protocol-section">
+                    <div class="protocol-header">
+                        <h2><i data-feather="check-square"></i> No Zero Days</h2>
+                    </div>
+                    
+                    <div class="focus-selector" id="focus-container"></div>
+
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progress-bar"></div>
+                    </div>
+
+                    <ul class="checklist" id="checklist-container"></ul>
+                </section>
+
+                <!-- Section 4: Field Notes -->
+                <section class="card">
+                    <h2><i data-feather="terminal"></i> Field Notes</h2>
+                    <div class="code-block" id="field-note-content"></div>
+                    <button class="copy-btn" id="copy-note-btn" title="Copy"><i data-feather="copy" style="width: 16px;"></i></button>
+                </section>
+
+            </div>
+
+            <!-- Right Column -->
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                
+                <!-- Weekly Reflection -->
+                <section class="card" id="weekly-section">
+                    <h2><i data-feather="book-open"></i> Weekly Notes</h2>
+                    <div class="weekly-nav">
+                        <span id="reflection-cycle-label">Cycle 1</span>
+                        <div>
+                            <button class="nav-btn" id="prev-reflection"><i data-feather="chevron-left"></i></button>
+                            <button class="nav-btn" id="next-reflection"><i data-feather="chevron-right"></i></button>
+                        </div>
+                    </div>
+                    <div class="weekly-prompts" style="margin-bottom: 12px; font-style: italic; font-size: 0.8rem; color: var(--text-secondary);">
+                        1. Understand better? &nbsp; 2. Confused by? &nbsp; 3. Next goal?
+                    </div>
+                    <textarea class="reflection-area" id="weekly-note-input" placeholder="Unlock by completing 7 days..."></textarea>
+                </section>
+
+                <!-- Section 3: The Dojo -->
+                <section class="card">
+                    <h2><i data-feather="target"></i> The Dojo</h2>
+                    <div class="dojo-grid">
+                        <a href="https://codingbat.com/java" target="_blank" class="dojo-block">
+                            <div class="dojo-info"><h4>Muscle Memory</h4><p>CodingBat Warmups</p></div>
+                            <i data-feather="arrow-up-right" class="link-icon"></i>
+                        </a>
+                        <a href="https://www.hackerrank.com/domains/java" target="_blank" class="dojo-block">
+                            <div class="dojo-info"><h4>Badge Progress</h4><p>HackerRank Domain</p></div>
+                            <i data-feather="arrow-up-right" class="link-icon"></i>
+                        </a>
+                        <a href="https://leetcode.com/problemset/all/?difficulty=EASY&page=1" target="_blank" class="dojo-block">
+                            <div class="dojo-info"><h4>Logic Practice</h4><p>LeetCode Easy</p></div>
+                            <i data-feather="arrow-up-right" class="link-icon"></i>
+                        </a>
+                    </div>
+                </section>
+
+                <!-- Section 2: The Archive -->
+                <section class="card">
+                    <h2><i data-feather="archive"></i> The Archive</h2>
+                    <div class="resource-list">
+                        <a href="https://www.youtube.com/c/KunalKushwaha" target="_blank" class="resource-link">
+                            <span>Kunal Kushwaha Channel</span><i data-feather="external-link" class="link-icon"></i>
+                        </a>
+                        <a href="https://www.w3schools.com/java/" target="_blank" class="resource-link">
+                            <span>W3Schools Java</span><i data-feather="external-link" class="link-icon"></i>
+                        </a>
+                        <a href="https://docs.oracle.com/javase/8/docs/technotes/guides/collections/overview.html" target="_blank" class="resource-link">
+                            <span>Official Collections Docs</span><i data-feather="external-link" class="link-icon"></i>
+                        </a>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Tooltip -->
+    <div id="tooltip"></div>
+
+    <!-- Side Panel -->
+    <div class="side-panel" id="side-panel">
+        <div class="panel-header">
+            <h3 id="panel-date">Date</h3>
+            <button class="close-panel" id="close-panel-btn"><i data-feather="x"></i></button>
+        </div>
+        <textarea class="daily-note-input" id="daily-note-input" placeholder="Log thoughts, confusion, or breakthroughs..."></textarea>
+        <div class="panel-status" id="panel-status">Saved</div>
+    </div>
+
+    <script>
+        /**
+         * PROJECT K: JAVA MASTERY
+         * System Version: 3.0 (Hardened)
+         * Start Date: 2026-02-05
+         */
+
+        /* --- 1. CONFIGURATION & CONSTANTS --- */
+        const START_DATE_STR = "2026-02-05";
+        const STORAGE_KEY = 'project_k_v3_core';
+        
+        const CHECKLIST_ITEMS = [
+            "Solve 3 CodingBat Java warmup problems",
+            "Watch 20 minutes of a deep Java video",
+            "Solve 1 HackerRank Java problem",
+            "Explain one Java concept out loud",
+            "Drink enough water today",
+            "Debug something without panic"
+        ];
+
+        const FOCUS_OPTIONS = ['Collections', 'Strings', 'Logic', 'Debugging', 'Revision'];
+
+        const FIELD_NOTES = [
+            `// Iterating a Map efficiently\nfor (Map.Entry<String, Integer> entry : map.entrySet()) {\n    System.out.println(entry.getKey() + ": " + entry.getValue());\n}`,
+            `// Scanner Safety\nScanner sc = new Scanner(System.in);\nif (sc.hasNextInt()) {\n    int num = sc.nextInt();\n}\nsc.close(); // Always close resources`,
+            `// String Comparison Pitfall\nString a = "hello";\nString b = new String("hello");\n\n// WRONG: a == b (compares references)\n// RIGHT: a.equals(b) (compares values)`,
+            `// StringBuilder for Loops\n// Don't concat strings in loops.\nStringBuilder sb = new StringBuilder();\nfor(int i=0; i<10; i++) {\n    sb.append(i);\n}\nString result = sb.toString();`,
+            `// Array vs ArrayList\n// Array: Fixed size. int[] arr = new int[5];\n// ArrayList: Dynamic. ArrayList<Integer> list = new ArrayList<>();\n// Note: ArrayList uses Integer wrapper, not int primitive.`
+        ];
+
+        /* --- 2. DATE UTILITIES (The Source of Truth) --- */
+        const DateUtils = {
+            getTodayStr: () => new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD local
+            parse: (str) => new Date(str + 'T00:00:00'),
+            
+            isValidRange: (dateStr) => {
+                const d = DateUtils.parse(dateStr);
+                const start = DateUtils.parse(START_DATE_STR);
+                const today = DateUtils.parse(DateUtils.getTodayStr());
+                return d >= start && d <= today;
+            },
+
+            isBeforeStart: (dateStr) => {
+                return DateUtils.parse(dateStr) < DateUtils.parse(START_DATE_STR);
+            },
+
+            isFuture: (dateStr) => {
+                return DateUtils.parse(dateStr) > DateUtils.parse(DateUtils.getTodayStr());
+            },
+            
+            diffDays: (d1, d2) => {
+                const oneDay = 24 * 60 * 60 * 1000;
+                return Math.round(Math.abs((d1 - d2) / oneDay));
+            }
+        };
+
+        /* --- 3. STATE MANAGEMENT --- */
+        const State = {
+            data: null,
+
+            defaults: {
+                version: 3,
+                lastVisit: DateUtils.getTodayStr(),
+                // Daily State (Ephemeral until saved to history)
+                daily: {
+                    focus: null,
+                    checklist: new Array(CHECKLIST_ITEMS.length).fill(false)
+                },
+                // Permanent Record: "YYYY-MM-DD" -> { percent, completed, focus, note }
+                history: {},
+                // Reflections: "cycleIndex" -> text
+                reflections: {}
+            },
+
+            load: function() {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) {
+                    this.data = JSON.parse(JSON.stringify(this.defaults));
+                } else {
+                    this.data = JSON.parse(raw);
+                    // Minimal migration or reset if needed
+                    if (!this.data.version || this.data.version < 3) {
+                        // Hard reset for V3 strictness if schema invalid
+                        // Preserving old notes if possible would be nice, but strict requirements imply clean slate correctness.
+                        // We will just adopt defaults for safety here.
+                        this.data = JSON.parse(JSON.stringify(this.defaults)); 
+                    }
+                }
+                
+                // Day Roll-over Check
+                const today = DateUtils.getTodayStr();
+                if (this.data.lastVisit !== today) {
+                    // Archive previous day if it was "today" in the UI
+                    // (Actually, V3 architecture saves to history ON CHANGE, so we just reset daily buffer)
+                    this.data.daily = { focus: null, checklist: new Array(CHECKLIST_ITEMS.length).fill(false) };
+                    this.data.lastVisit = today;
+                    this.save();
+                }
+                
+                // Ensure today has a history entry if missing (for rendering consistency)
+                if (!this.data.history[today]) {
+                    this.data.history[today] = { percent: 0, completed: false, focus: null, note: "" };
+                }
+            },
+
+            save: function() {
+                // Sync daily buffer to history for today
+                const today = DateUtils.getTodayStr();
+                const completedCount = this.data.daily.checklist.filter(Boolean).length;
+                const percent = Math.round((completedCount / CHECKLIST_ITEMS.length) * 100);
+                
+                this.data.history[today] = {
+                    ...this.data.history[today],
+                    percent: percent,
+                    completed: percent === 100,
+                    focus: this.data.daily.focus
+                };
+
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+                Metrics.update(); // Recalc metrics on save
+            },
+            
+            setDailyFocus: function(focus) {
+                this.data.daily.focus = focus;
+                this.save();
+            },
+
+            toggleCheck: function(index) {
+                const arr = this.data.daily.checklist;
+                const newState = !arr[index];
+                
+                if (newState) {
+                    arr[index] = true;
+                } else {
+                    // Waterfall uncheck
+                    for (let i = index; i < arr.length; i++) {
+                        arr[i] = false;
+                    }
+                }
+                this.save();
+            },
+
+            updateNote: function(dateStr, text) {
+                if (!this.data.history[dateStr]) {
+                    this.data.history[dateStr] = { percent: 0, completed: false, focus: null, note: "" };
+                }
+                this.data.history[dateStr].note = text;
+                this.save(); // Note: direct save to history, bypasses daily sync for past dates
+            },
+
+            saveReflection: function(cycleIndex, text) {
+                this.data.reflections[cycleIndex] = text;
+                this.save(); // Persist reflections immediately
+            }
+        };
+
+        /* --- 4. METRICS ENGINE --- */
+        const Metrics = {
+            activeDays: 0,
+            currentStreak: 0, // Not displayed, but part of calc
+            longestStreak: 0,
+            collectionsFocusCount: 0,
+            totalCompletedDays: 0,
+
+            update: function() {
+                const history = State.data.history;
+                const dates = Object.keys(history).sort(); // Sort chronological
+                const start = DateUtils.parse(START_DATE_STR);
+                
+                let currentRun = 0;
+                let maxRun = 0;
+                let active = 0;
+                let collections = 0;
+                let completedTotal = 0;
+                
+                // Iterate strictly chronologically
+                // We need to fill in gaps to break streaks
+                if (dates.length > 0) {
+                    const firstDate = DateUtils.parse(dates[0]);
+                    const lastDate = DateUtils.parse(dates[dates.length - 1]);
+                    
+                    // Optimization: We only care about streak logic which requires continuity
+                    // But for "Active Days", just counting entries > 0 is enough
+                    
+                    // 1. Active & Focus & Total Completed
+                    dates.forEach(d => {
+                        const entry = history[d];
+                        // Filter out pre-start trash data if any
+                        if (DateUtils.parse(d) < start) return; 
+
+                        if (entry.percent > 0) active++;
+                        if (entry.completed) completedTotal++;
+                        if (entry.focus === 'Collections') collections++;
+                    });
+
+                    // 2. Strict Streak Calculation
+                    // We must iterate day by day from START to TODAY to check continuity
+                    const today = DateUtils.parse(DateUtils.getTodayStr());
+                    // Start checking streaks from the first recorded day or Start Date?
+                    // "Longest streak = longest continuous run of COMPLETED days"
+                    
+                    // We just scan the sorted dates. If gap > 1 day, streak breaks.
+                    // Actually, if a day exists in history but completed=false, streak breaks.
+                    // If day missing from history, streak breaks.
+                    
+                    let streak = 0;
+                    // Scan from Start Date to Today
+                    for (let d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {
+                        const dStr = d.toLocaleDateString('en-CA');
+                        const entry = history[dStr];
+                        
+                        if (entry && entry.completed) {
+                            streak++;
+                        } else {
+                            // If today is not completed yet, does it break streak?
+                            // Usually current streak includes today if completed, or is yesterday's streak.
+                            // Requirements: "Missing a day breaks streak".
+                            // If today is incomplete, streak is 0? No, that's harsh.
+                            // Standard logic: Current Streak is contiguous completed days ending Yesterday OR Today.
+                            
+                            // For "Longest Streak", we just track max `streak` seen before reset.
+                            if (streak > maxRun) maxRun = streak;
+                            streak = 0;
+                        }
+                    }
+                    // Final check at end of loop
+                    if (streak > maxRun) maxRun = streak;
+                }
+
+                this.activeDays = active;
+                this.longestStreak = maxRun;
+                this.collectionsFocusCount = collections;
+                this.totalCompletedDays = completedTotal;
+                
+                // Update UI immediately
+                DOM.updateMetrics();
+                ReflectionUI.update();
+            }
+        };
+
+        /* --- 5. DOM & RENDERING --- */
+        const DOM = {
+            // Cache elements
+            els: {
+                date: document.getElementById('current-date'),
+                streak: document.getElementById('streak-display'),
+                yearGrid: document.getElementById('year-grid'),
+                checklist: document.getElementById('checklist-container'),
+                progressBar: document.getElementById('progress-bar'),
+                focusContainer: document.getElementById('focus-container'),
+                fieldNote: document.getElementById('field-note-content'),
+                metrics: {
+                    active: document.getElementById('metric-active'),
+                    maxStreak: document.getElementById('metric-max-streak'),
+                    focus: document.getElementById('metric-focus')
+                },
+                sidePanel: document.getElementById('side-panel'),
+                panelDate: document.getElementById('panel-date'),
+                dailyInput: document.getElementById('daily-note-input'),
+                panelStatus: document.getElementById('panel-status'),
+                tooltip: document.getElementById('tooltip')
+            },
+
+            init: function() {
+                this.renderHeader();
+                this.renderGrid();
+                this.renderFocus();
+                this.renderChecklist();
+                this.renderNote();
+                
+                // Bind Global Events
+                document.getElementById('close-panel-btn').addEventListener('click', Panel.close);
+                document.getElementById('copy-note-btn').addEventListener('click', () => {
+                   navigator.clipboard.writeText(this.els.fieldNote.textContent);
+                });
+                
+                // Keyboard Escape
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') Panel.close();
+                });
+            },
+
+            renderHeader: function() {
+                const today = new Date();
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                this.els.date.textContent = today.toLocaleDateString('en-US', options).toUpperCase();
+            },
+
+            updateMetrics: function() {
+                // Streak Logic for Header:
+                // We need "Current Streak".
+                // Logic: Count backwards from Today.
+                let currentStreak = 0;
+                const today = DateUtils.parse(DateUtils.getTodayStr());
+                const history = State.data.history;
+                
+                // Check today
+                const todayStr = DateUtils.getTodayStr();
+                if (history[todayStr]?.completed) {
+                    currentStreak++;
+                    // Check yesterday backwards
+                    let d = new Date(today);
+                    d.setDate(d.getDate() - 1);
+                    while (d >= DateUtils.parse(START_DATE_STR)) {
+                         const dStr = d.toLocaleDateString('en-CA');
+                         if (history[dStr]?.completed) currentStreak++;
+                         else break;
+                         d.setDate(d.getDate() - 1);
+                    }
+                } else {
+                    // Check yesterday backwards
+                    let d = new Date(today);
+                    d.setDate(d.getDate() - 1);
+                    while (d >= DateUtils.parse(START_DATE_STR)) {
+                         const dStr = d.toLocaleDateString('en-CA');
+                         if (history[dStr]?.completed) currentStreak++;
+                         else break;
+                         d.setDate(d.getDate() - 1);
+                    }
+                }
+
+                this.els.streak.textContent = `STREAK: ${currentStreak}`;
+                this.els.metrics.active.textContent = Metrics.activeDays;
+                this.els.metrics.maxStreak.textContent = Metrics.longestStreak;
+                this.els.metrics.focus.textContent = Metrics.collectionsFocusCount;
+            },
+
+            renderGrid: function() {
+                this.els.yearGrid.innerHTML = '';
+                
+                // Generate 2026 Grid (GitHub Style: Col-Major)
+                // We need 53 columns, 7 rows.
+                // Start Date: Jan 1 2026 (Thursday)
+                const startYear = new Date('2026-01-01T00:00:00');
+                const endYear = new Date('2026-12-31T00:00:00');
+                
+                // Find the Sunday before Jan 1 to align grid start
+                const gridStart = new Date(startYear);
+                gridStart.setDate(startYear.getDate() - startYear.getDay()); // Go back to Sunday
+
+                // Generate cells
+                // We generate roughly 53 weeks * 7 days
+                let current = new Date(gridStart);
+                
+                // We render column by column? 
+                // CSS Grid is set to `grid-auto-flow: column`. 
+                // So we just dump days in chronological order and they fill columns (rows 1-7).
+                // Wait, `grid-template-rows: repeat(7, ...)` and auto-flow column means item 1 goes to 0,0, item 2 to 0,1 (down the col).
+                // Yes. So chronological order works perfectly.
+                
+                while (current <= endYear || current.getDay() !== 0) {
+                    const dateStr = current.toLocaleDateString('en-CA');
+                    const node = document.createElement('div');
+                    node.className = 'day-node';
+                    
+                    // Determine state
+                    const dObj = DateUtils.parse(dateStr);
+                    const todayObj = DateUtils.parse(DateUtils.getTodayStr());
+                    
+                    // 1. Is it 2026? (Grid padding might be 2025)
+                    const is2026 = dObj.getFullYear() === 2026;
+                    
+                    if (!is2026) {
+                        node.style.opacity = '0'; // Hide padding days
+                        node.style.pointerEvents = 'none';
+                    } else {
+                        // 2. Strict Logic
+                        if (DateUtils.isBeforeStart(dateStr)) {
+                            node.classList.add('pre-start');
+                        } else if (DateUtils.isFuture(dateStr)) {
+                            node.classList.add('future');
+                        } else {
+                            // Valid Interactive Date
+                            if (dateStr === DateUtils.getTodayStr()) node.classList.add('today');
+                            
+                            // History Data
+                            const entry = State.data.history[dateStr];
+                            if (entry) {
+                                if (entry.completed) node.classList.add('active-full');
+                                else if (entry.percent > 0) node.classList.add('active-partial');
+                            }
+                            
+                            // Interaction
+                            node.addEventListener('mouseenter', (e) => this.showTooltip(e, dateStr));
+                            node.addEventListener('mouseleave', this.hideTooltip);
+                            node.addEventListener('click', () => Panel.open(dateStr));
+                        }
+                    }
+
+                    this.els.yearGrid.appendChild(node);
+                    current.setDate(current.getDate() + 1);
+                    
+                    // Safety break
+                    if (current.getFullYear() > 2026) break;
+                }
+            },
+
+            renderFocus: function() {
+                const container = this.els.focusContainer;
+                container.innerHTML = '';
+                const currentFocus = State.data.daily.focus;
+
+                FOCUS_OPTIONS.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = `focus-option ${currentFocus === opt ? 'active' : ''}`;
+                    btn.textContent = opt;
+                    btn.onclick = () => {
+                        State.setDailyFocus(opt);
+                        this.renderFocus();
+                        this.renderChecklist();
+                        this.renderGrid(); // Update grid for today
+                        // Remove attention shake if exists
+                        container.classList.remove('attention');
+                    };
+                    container.appendChild(btn);
+                });
+            },
+
+            renderChecklist: function() {
+                const list = this.els.checklist;
+                list.innerHTML = '';
+                const stateArr = State.data.daily.checklist;
+                const hasFocus = !!State.data.daily.focus;
+                let completedCount = 0;
+
+                CHECKLIST_ITEMS.forEach((text, index) => {
+                    const li = document.createElement('li');
+                    const isChecked = stateArr[index];
+                    
+                    // Strict Waterfall Logic
+                    // Unlocked if: Focus Selected AND (Index is 0 OR Previous is Checked)
+                    const isUnlocked = hasFocus && (index === 0 || stateArr[index - 1]);
+                    
+                    li.className = `checklist-item ${isChecked ? 'completed' : ''} ${!isUnlocked ? 'locked' : ''}`;
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = isChecked;
+                    checkbox.disabled = !isUnlocked;
+                    
+                    const changeHandler = () => {
+                        if (!hasFocus) {
+                            this.els.focusContainer.classList.add('attention');
+                            setTimeout(() => this.els.focusContainer.classList.remove('attention'), 500);
+                            checkbox.checked = false; // Force uncheck
+                            return;
+                        }
+                        State.toggleCheck(index);
+                        this.renderChecklist();
+                        this.renderGrid();
+                        Metrics.update();
+                    };
+
+                    checkbox.addEventListener('change', changeHandler);
+                    
+                    // Click text to toggle
+                    const span = document.createElement('span');
+                    span.textContent = text;
+                    span.onclick = () => {
+                        if (isUnlocked) {
+                             // Toggle via State
+                             // Need to handle UI check manually if we bypass checkbox click
+                             State.toggleCheck(index);
+                             this.renderChecklist();
+                             this.renderGrid();
+                             Metrics.update();
+                        } else if (!hasFocus) {
+                            this.els.focusContainer.classList.add('attention');
+                            setTimeout(() => this.els.focusContainer.classList.remove('attention'), 500);
+                        }
+                    };
+
+                    li.appendChild(checkbox);
+                    li.appendChild(span);
+                    list.appendChild(li);
+                    
+                    if (isChecked) completedCount++;
+                });
+
+                const pct = (completedCount / CHECKLIST_ITEMS.length) * 100;
+                this.els.progressBar.style.width = `${pct}%`;
+            },
+            
+            renderNote: function() {
+                // Deterministic note based on day index from start of year
+                const start = new Date(new Date().getFullYear(), 0, 0);
+                const diff = new Date() - start;
+                const oneDay = 1000 * 60 * 60 * 24;
+                const dayOfYear = Math.floor(diff / oneDay);
+                const index = dayOfYear % FIELD_NOTES.length;
+                this.els.fieldNote.textContent = FIELD_NOTES[index];
+            },
+
+            showTooltip: function(e, dateStr) {
+                const tt = DOM.els.tooltip;
+                const history = State.data.history[dateStr];
+                
+                let html = `<strong>${dateStr}</strong>`;
+                if (history) {
+                    if (history.focus) html += ` <span style="opacity:0.7">| ${history.focus}</span>`;
+                    html += `<br>Completed: ${history.percent}%`;
+                } else {
+                    html += `<br>No Data`;
+                }
+
+                tt.innerHTML = html;
+                
+                // Position
+                const rect = e.target.getBoundingClientRect();
+                tt.style.left = `${rect.left + window.scrollX}px`;
+                tt.style.top = `${rect.top + window.scrollY - 40}px`;
+                tt.style.opacity = '1';
+            },
+
+            hideTooltip: function() {
+                DOM.els.tooltip.style.opacity = '0';
+            }
+        };
+
+        /* --- 6. REFLECTION LOGIC --- */
+        const ReflectionUI = {
+            currentCycle: 0,
+            viewingCycle: 0,
+            
+            init: function() {
+                this.els = {
+                    area: document.getElementById('weekly-note-input'),
+                    label: document.getElementById('reflection-cycle-label'),
+                    prev: document.getElementById('prev-reflection'),
+                    next: document.getElementById('next-reflection')
+                };
+
+                this.els.area.addEventListener('input', (e) => {
+                    if (this.viewingCycle === this.currentCycle) {
+                         State.saveReflection(this.currentCycle, e.target.value);
+                    }
+                });
+
+                this.els.prev.onclick = () => this.navigate(-1);
+                this.els.next.onclick = () => this.navigate(1);
+            },
+
+            update: function() {
+                // Calculate current cycle: floor(totalCompletedDays / 7)
+                // If 0-6 days done -> Cycle 0 (Locked?)
+                // Requirement: "Appears after every 7 completed days"
+                // So Cycle 1 unlocks at 7 days.
+                
+                const total = Metrics.totalCompletedDays;
+                this.currentCycle = Math.floor(total / 7);
+                
+                // Initialize viewing cycle on first load
+                if (this.viewingCycle === 0) this.viewingCycle = Math.max(1, this.currentCycle);
+
+                this.render();
+            },
+
+            navigate: function(dir) {
+                this.viewingCycle += dir;
+                this.render();
+            },
+
+            render: function() {
+                // Valid range: 1 to currentCycle (or 1 if current is 0, but locked)
+                // If currentCycle is 0, we show "Progress to unlock".
+                
+                const locked = this.currentCycle < 1;
+                
+                if (locked) {
+                    this.els.label.textContent = "Reflection Locked";
+                    this.els.area.value = "";
+                    this.els.area.placeholder = `Complete ${7 - Metrics.totalCompletedDays} more days to unlock reflection.`;
+                    this.els.area.readOnly = true;
+                    this.els.prev.disabled = true;
+                    this.els.next.disabled = true;
+                    return;
+                }
+                
+                // Clamping
+                if (this.viewingCycle < 1) this.viewingCycle = 1;
+                if (this.viewingCycle > this.currentCycle) this.viewingCycle = this.currentCycle;
+
+                this.els.label.textContent = `Cycle ${this.viewingCycle}`;
+                
+                // Load data
+                const text = State.data.reflections[this.viewingCycle] || "";
+                this.els.area.value = text;
+                
+                // Read-only if viewing past
+                const isPast = this.viewingCycle < this.currentCycle;
+                this.els.area.readOnly = isPast;
+                this.els.area.placeholder = isPast ? "Archived reflection." : "Type your reflection here...";
+
+                // Nav Buttons
+                this.els.prev.disabled = this.viewingCycle <= 1;
+                this.els.next.disabled = this.viewingCycle >= this.currentCycle;
+            }
+        };
+
+        /* --- 7. SIDE PANEL LOGIC --- */
+        const Panel = {
+            activeDate: null,
+            timer: null,
+
+            open: function(dateStr) {
+                this.activeDate = dateStr;
+                DOM.els.panelDate.textContent = dateStr;
+                DOM.els.sidePanel.classList.add('open');
+                
+                // Load Note
+                const entry = State.data.history[dateStr] || {};
+                DOM.els.dailyInput.value = entry.note || "";
+                DOM.els.panelStatus.textContent = "Ready";
+
+                // Setup Input Listener
+                DOM.els.dailyInput.oninput = (e) => {
+                    DOM.els.panelStatus.textContent = "Typing...";
+                    clearTimeout(this.timer);
+                    this.timer = setTimeout(() => {
+                        State.updateNote(this.activeDate, e.target.value);
+                        DOM.els.panelStatus.textContent = "Saved";
+                    }, 500);
+                };
+            },
+
+            close: function() {
+                DOM.els.sidePanel.classList.remove('open');
+                DOM.els.dailyInput.oninput = null; // Cleanup
+            }
+        };
+
+        /* --- BOOTSTRAP --- */
+        State.load();
+        Metrics.update(); // Initial calc
+        DOM.init();
+        ReflectionUI.init();
+        ReflectionUI.update();
+        feather.replace();
+
+    </script>
+</body>
+</html>
